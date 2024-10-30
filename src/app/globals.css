@@ -8,16 +8,18 @@ body {
 
 @layer base {
   :root {
-    --background: 0, 0, 99%;
-    --foreground: 199, 33, 19;
-    --card: 0 0% 100%;
+    --background: 0, 0%, 99%;
+    --foreground: 199, 33%, 19%;
+    --card: 0 0% 99%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 199, 33%, 19%;
+    --primary-foreground: 0, 0%, 99%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary-200: 199, 33%, 75%, 1;
+    --secondary-100: 195, 31%, 95%, 1;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 210 40% 96.1%;
@@ -33,6 +35,24 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+
+    /* Typography Scale */
+    --font-size-base: 1rem; /* 16px */
+    --font-size-sm: calc(var(--font-size-base) / 1.2); /* 13.33px */
+    --font-size-md: var(--font-size-base); /* 16px */
+    --font-size-lg: calc(var(--font-size-base) * 1.2); /* 19.2px */
+    --font-size-xl: calc(var(--font-size-base) * 1.2 * 1.2); /* 23.04px */
+    --font-size-2xl: calc(var(--font-size-base) * 1.2 * 1.2 * 1.2); /* 27.65px */
+    --font-size-3xl: calc(var(--font-size-base) * 1.2 * 1.2 * 1.2 * 1.2); /* 33.18px */
+    --font-size-4xl: calc(var(--font-size-base) * 1.2 * 1.2 * 1.2 * 1.2 * 1.2); /* 39.82px */
+    --font-size-5xl: calc(var(--font-size-base) * 1.2 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2); /* 47.78px */
+
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+      
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -69,4 +89,69 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+   /* Apply Typography Scale */
+  h1 {
+    font-size: var(--font-size-5xl);
+    font-weight: var(--font-weight-bold);
+  }
+
+  h2 {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  h3 {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  h4 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-medium);
+  }
+
+  h5 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-medium);
+  }
+
+  h6 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-normal);
+  }
+
+  p, li {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-normal);
+  }
+
+  small {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-light);
+  }
+  
+}
+
+@layer utilities{
+  .custom-disc-size {
+    list-style: none;
+  }
+
+  .custom-disc-size li{
+    position: relative;
+  }
+  
+  .custom-disc-size li::before {
+    content: " ";  /* Unicode character for bullet */
+    position: absolute;
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+    left: -25px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: hsla(var(--secondary-200));
+  }
+  
+  
 }
