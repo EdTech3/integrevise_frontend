@@ -1,6 +1,6 @@
 "use client"
 import React from 'react';
-import { CommunicationMethodTypes } from '../type';
+import { CommunicationMethodTypes } from '../../../../type';
 
 interface Props {
     icon: React.ReactNode;

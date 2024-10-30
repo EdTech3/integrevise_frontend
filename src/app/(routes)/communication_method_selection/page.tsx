@@ -1,20 +1,25 @@
 "use client"
-import Logo from '@/components/shared/Logo'
-import React from 'react'
-import { GiSoundWaves } from "react-icons/gi";
-import CommunicationMethod from './components/CommunicationMethod';
+import { useCommunicationMethodStore } from '@/app/store';
+import Logo from '@/components/shared/Logo';
 import { FaKeyboard } from "react-icons/fa";
-import { CommunicationMethodTypes } from './type';
+import { GiSoundWaves } from "react-icons/gi";
+import { CommunicationMethodTypes } from '../../../type';
+import CommunicationMethod from './components/CommunicationMethod';
+import { useRouter } from 'next/navigation';
+
 
 const CommunicationMethodSelection = () => {
-
+  const updateCommunicationMethod = useCommunicationMethodStore((state) => state.updateCommunicationMethod)
+  const router = useRouter()
 
   function handleMethodSelected(option: CommunicationMethodTypes) {
-    console.log(option)
+    updateCommunicationMethod(option)
+    router.push("/facial_recognition")
+
   }
 
   return (
-    <div className='flex flex-col items-center mt-20'>
+    <main className='flex flex-col items-center mt-20'>
       <Logo width={200} height={200} className='mb-4' />
 
       <h4 className='text-center lg:w-[35ch] text-2xl lg:text-3xl mb-20 font-medium'>
@@ -25,7 +30,7 @@ const CommunicationMethodSelection = () => {
         <CommunicationMethod handleClick={handleMethodSelected} value='voice' icon={<GiSoundWaves className='text-4xl lg:text-5xl' />} text="Voice" />
         <CommunicationMethod handleClick={handleMethodSelected} value='keyboard' icon={<FaKeyboard className='text-3xl lg:text-4xl' />} text="Keyboard" />
       </div>
-    </div>
+    </main>
   )
 }
 
