@@ -1,18 +1,13 @@
 "use client"
-import Logo from '@/components/shared/Logo'
-import { Button } from '@/components/ui/button'
-import Image from 'next/image'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Label } from '@/components/ui/label'
+import Logo from "@/components/shared/Logo"
+import { Button } from "@/components/ui/button"
+import * as faceapi from "face-api.js"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useRef, useState } from "react"
+import Header from "./components/Header"
+import ProgressTimeline from "./components/ProgressTimeline"
+import { Stage } from "./components/type"
 
 
 const FacialRecognition = () => {
@@ -25,13 +20,35 @@ const FacialRecognition = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [deviceId, setDeviceId] = useState<string | null>(null)
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
+  const [modelsLoaded, setModelsLoaded] = useState(false)
+  const [stages, setStages] = useState<Stage[]>([
+    {
+      id: "cameraEnabled",
+      label: "Camera Enabled",
+      status: "neutral",
+      loadingText: "Getting Camera",
+      errorText: "Camera Error",
+      successText: "Camera Ready",
+      neutralText: "Camera Not Started",
+    },
+    {
+      id: "faceRecognized",
+      label: "Facial Recognition",
+      status: "neutral",
+      loadingText: "Performing Face Recognition",
+      errorText: "Recognition Failed",
+      successText: "Face Recognized",
+      neutralText: "Recognition Not Started",
+    },
+  ]);
+
 
   const updateDevices = useCallback(async () => {
     // Fetch all media devices available on the system
     const devices = await navigator.mediaDevices.enumerateDevices()
 
     // Filter out only the video input devices (cameras)
-    const videoDevices = devices.filter(device => device.kind === 'videoinput')
+    const videoDevices = devices.filter(device => device.kind === "videoinput")
 
     // Update the state with the list of video devices
     setDevices(videoDevices)
@@ -42,28 +59,86 @@ const FacialRecognition = () => {
     }
   }, [deviceId])
 
+  const updateStageStatus = (stageId: string, status: "loading" | "failed" | "successful") => {
+    setStages(prevStages =>
+      prevStages.map(stage =>
+        stage.id === stageId ? { ...stage, status } : stage
+      )
+    );
+  };
+
+  // Load models
+  const loadModels = async () => {
+    const MODEL_URL = "https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights"
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL)
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+    setModelsLoaded(true)
+  }
 
   const captureImage = () => {
-    // High level: Captures an image from the video stream and stores it as a data URL.
     if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d')
+      const context = canvasRef.current.getContext("2d")
       if (context) {
-        // Set the canvas dimensions to match the video dimensions
         canvasRef.current.width = videoRef.current.videoWidth
         canvasRef.current.height = videoRef.current.videoHeight
-
-        // Draw the current frame from the video onto the canvas
         context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height)
-
-        // Convert the canvas content to a data URL (base64 encoded image)
-        const imageData = canvasRef.current.toDataURL('image/png')
-
-        // Update the state with the captured image data URL
+        const imageData = canvasRef.current.toDataURL("image/png")
         setCapturedImage(imageData)
+        return imageData
       }
     }
   }
 
+  const performFaceRecognition = useCallback(async (imageData: string) => {
+
+    updateStageStatus('faceRecognized', 'loading')
+    const capturedImageElement = new Image()
+    capturedImageElement.crossOrigin = "anonymous"
+    capturedImageElement.src = imageData
+
+    if (!modelsLoaded) {
+      alert("Models are not loaded yet. Please wait.")
+      return
+    }
+
+    capturedImageElement.onload = async () => {
+      const capturedDetections = await faceapi.detectAllFaces(capturedImageElement).withFaceLandmarks().withFaceDescriptors()
+      const referenceImageElement = document.getElementById("referenceImage") as HTMLImageElement
+      referenceImageElement.crossOrigin = "anonymous"
+      const referenceDetections = await faceapi.detectAllFaces(referenceImageElement).withFaceLandmarks().withFaceDescriptors()
+
+      if (capturedDetections.length > 1) {
+        alert("Multiple faces detected in the captured image. Please ensure only one face is visible.")
+        updateStageStatus('faceRecognized', 'failed');
+        return
+      }
+
+      if (referenceDetections.length > 1) {
+        alert("Multiple faces detected in the reference image. Please ensure only one face is visible.")
+        updateStageStatus('faceRecognized', 'failed')
+        return
+      }
+
+      if (capturedDetections.length === 1 && referenceDetections.length === 1) {
+        const distance = faceapi.euclideanDistance(capturedDetections[0].descriptor, referenceDetections[0].descriptor)
+        if (distance < 0.6) {
+          updateStageStatus('faceRecognized', 'successful')
+          alert("Face Matched")
+        } else {
+          alert("Face not matched!")
+          updateStageStatus('faceRecognized', 'failed')
+        }
+      } else {
+        alert("No face detected in one of the images.")
+        updateStageStatus('faceRecognized', 'failed')
+      }
+    }
+  }, [modelsLoaded])
+
+  useEffect(() => {
+    loadModels()
+  }, [])
 
   // This useEffect hook initializes the list of media devices when the component mounts and sets up an event listener to update the list whenever the media devices change. It also cleans up the event listener when the component unmounts.
   useEffect(() => {
@@ -76,34 +151,47 @@ const FacialRecognition = () => {
     }
   }, [updateDevices])
 
-
-
   useEffect(() => {
+    const videoElem = videoRef.current
+
     const getVideoStream = async () => {
       if (!deviceId) return
 
       try {
+        updateStageStatus("cameraEnabled", "loading")
         const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId } })
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
+        if (videoElem) {
+          videoElem.srcObject = stream
         }
         setPermissionGranted(true)
+        updateStageStatus("cameraEnabled", "successful");
       } catch (error) {
         console.error("Error accessing webcam: ", error)
         setPermissionGranted(false)
+        updateStageStatus("cameraEnabled", "failed");
+
       }
     }
 
     getVideoStream()
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream
+      if (videoElem && videoElem.srcObject) {
+        const stream = videoElem.srcObject as MediaStream
         stream.getTracks().forEach(track => track.stop())
       }
     }
   }, [deviceId])
 
+
+  useEffect(() => {
+    const returnedImage = captureImage()
+
+    if (returnedImage) {
+      performFaceRecognition(returnedImage)
+    }
+
+  }, [performFaceRecognition])
 
   if (!isMethodPresent) return (
     <div>
@@ -118,44 +206,31 @@ const FacialRecognition = () => {
   )
 
   return (
-    <main className='py-2 min-h-screen flex flex-col space-y-4'>
+    <main className="py-2 min-h-screen flex flex-col space-y-4">
       <Logo />
 
-      <div className='relative overlay rounded-lg overflow-hidden'>
-        {/* Header */}
-        <div className='absolute top-0 left-0 z-10 w-full flex justify-between items-center px-4 py-2'>
-          <h6 className='text-background '>Chloe decker</h6>
-
-          <div className='flex flex-row items-center space-x-3'>
-            <Label htmlFor="deviceSelect" className="text-sm text-background">Select Camera </Label>
-            <Select onValueChange={(value) => setDeviceId(value)} value={deviceId || ''}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Camera" />
-              </SelectTrigger>
-              <SelectContent>
-                {devices.map(device => (
-                  <SelectItem key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Camera ${device.deviceId}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+      <div className="relative overlay rounded-lg overflow-hidden text-gray-200">
+        <Header deviceId={deviceId} devices={devices} name="Chloe Decker" setDeviceId={setDeviceId} />
+        <ProgressTimeline stages={stages} />
 
         {/* Camera Feed */}
-        <video ref={videoRef} className='w-full h-[600px] object-cover scale-x-[-1]' muted autoPlay playsInline />
-
-        <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+        <video ref={videoRef} className="w-full h-[600px] object-cover scale-x-[-1]" muted autoPlay playsInline />
+        <canvas ref={canvasRef} style={{ display: "none" }} />
       </div>
 
-      <Button className='w-full' onClick={captureImage}>
-        Capture Image
+      <Button
+        disabled={stages[1].status !== "successful"}
+        className="w-full"
+      >
+        Continue
       </Button>
+
+      <img src="/test_image/kelvin.jpeg" id="referenceImage" className="hidden" />
+
       {capturedImage && (
         <div>
           <h3>Captured Image:</h3>
-          <Image src={capturedImage} alt="Captured Image" width={500} height={500} />
+          <img src={capturedImage} alt="Captured Image" width={500} height={500} />
         </div>
       )}
 
