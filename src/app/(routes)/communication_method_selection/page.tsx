@@ -1,21 +1,17 @@
 "use client"
-import { useCommunicationMethodStore } from '@/app/store';
 import Logo from '@/components/shared/Logo';
+import { useRouter } from 'next/navigation';
 import { FaKeyboard } from "react-icons/fa";
 import { GiSoundWaves } from "react-icons/gi";
 import { CommunicationMethodTypes } from '../../../type';
 import CommunicationMethod from './components/CommunicationMethod';
-import { useRouter } from 'next/navigation';
 
 
 const CommunicationMethodSelection = () => {
-  const updateCommunicationMethod = useCommunicationMethodStore((state) => state.updateCommunicationMethod)
   const router = useRouter()
 
-  function handleMethodSelected(option: CommunicationMethodTypes) {
-    updateCommunicationMethod(option)
-    router.push("/facial_recognition")
-
+  function handleMethodSelected(method: CommunicationMethodTypes) {
+    router.push(`/facial_recognition?method=${method}`)
   }
 
   return (
