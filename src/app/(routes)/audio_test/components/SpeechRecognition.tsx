@@ -6,11 +6,15 @@ import React, { useState } from 'react';
 import useMediaDevices from '../../facial_recognition/hooks/useMediaDevices';
 import AudioSelector from './AudioSelector';
 import { Card } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+
 
 const SpeechRecognition: React.FC = () => {
     const { transcript, isListening, error, startListening, stopListening } = useDeepgramSTT("#waveform");
     const [deviceId, setDeviceId] = useState<string | null>(null)
     const devices = useMediaDevices(deviceId, setDeviceId, "audioinput")
+
+    const router = useRouter()
 
     const handleButtonClick = () => {
         if (isListening) {
@@ -41,6 +45,7 @@ const SpeechRecognition: React.FC = () => {
                     </Button>
                     <Button
                         disabled={!transcript}
+                        onClick={() => router.push("/viva")}
                         className="text-center w-full"
                     >
                         Continue

@@ -14,6 +14,7 @@ import useLoadModels from "./hooks/useLoadModels"
 import useMediaDevices from "./hooks/useMediaDevices"
 import { captureImage } from "./utils/captureImage"
 import { compareFaces, detectFaces } from "./utils/faceDetection"
+import Container from "@/components/shared/Container"
 
 
 const FacialRecognition = () => {
@@ -125,45 +126,47 @@ const FacialRecognition = () => {
   )
 
   return (
-    <main className="py-2 min-h-screen flex flex-col space-y-4">
-      <Logo />
+    <Container >
+      <main className="py-2 min-h-screen flex flex-col space-y-4">
+        <Logo />
 
-      <div className="relative overlay rounded-lg overflow-hidden text-gray-200">
-        <Header deviceId={deviceId} devices={devices} name="Chloe Decker" setDeviceId={setDeviceId} />
-        <ProgressTimeline stages={stages} />
-        <CameraFeed deviceId={deviceId} updateStageStatus={updateStageStatus} ref={videoRef} />
-        <canvas ref={canvasRef} style={{ display: "none" }} />
-      </div>
-
-      <Button
-        onClick={handleRecognitionButtonClicked}
-        disabled={stages[0].status === "loading" || stages[0].status === "successful"}
-        variant={"outline"}
-        className="w-full"
-      >
-        {stages[0].status === "failed" ? "Try again?" : "Start Recognition"}
-      </Button>
-
-      <Button
-        disabled={stages[1].status !== "successful"}
-        onClick={() => {
-          router.push("/audio_test")
-        }}
-        className="w-full"
-      >
-        Continue
-      </Button>
-
-      <ReferenceImage />
-
-      {capturedImage && (
-        <div>
-          <h3>Captured Image:</h3>
-          <img src={capturedImage} alt="Captured Image" width={500} height={500} />
+        <div className="relative overlay rounded-lg overflow-hidden text-gray-200">
+          <Header deviceId={deviceId} devices={devices} name="Chloe Decker" setDeviceId={setDeviceId} />
+          <ProgressTimeline stages={stages} />
+          <CameraFeed deviceId={deviceId} updateStageStatus={updateStageStatus} ref={videoRef} />
+          <canvas ref={canvasRef} style={{ display: "none" }} />
         </div>
-      )}
 
-    </main>
+        <Button
+          onClick={handleRecognitionButtonClicked}
+          disabled={stages[0].status === "loading" || stages[0].status === "successful"}
+          variant={"outline"}
+          className="w-full"
+        >
+          {stages[0].status === "failed" ? "Try again?" : "Start Recognition"}
+        </Button>
+
+        <Button
+          disabled={stages[1].status !== "successful"}
+          onClick={() => {
+            router.push("/audio_test")
+          }}
+          className="w-full"
+        >
+          Continue
+        </Button>
+
+        <ReferenceImage />
+
+        {capturedImage && (
+          <div>
+            <h3>Captured Image:</h3>
+            <img src={capturedImage} alt="Captured Image" width={500} height={500} />
+          </div>
+        )}
+
+      </main>
+    </Container>
   )
 }
 

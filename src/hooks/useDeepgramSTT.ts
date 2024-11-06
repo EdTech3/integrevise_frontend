@@ -161,8 +161,13 @@ const useDeepgramSTT = (waveSurferContainer: string, deviceId?: string): UseDeep
 
 
   const startListening = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia || !apiKey) {
-      setError(new Error('Required APIs are not available'));
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError(new Error('Could not access microphone'));
+      return;
+    }
+
+    if (!apiKey) {
+      console.warn('API key is either loading or not available');
       return;
     }
   
