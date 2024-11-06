@@ -1,124 +1,250 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { createClient, LiveTranscriptionEvents, type LiveClient } from '@deepgram/sdk';
+import WaveSurfer from 'wavesurfer.js';
+import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js';
 
-interface UseDeepgramSTTResult {
+interface UseDeepGramSTTResult {
   transcript: string;
   isListening: boolean;
   error: Error | null;
+  audioURL: string | null;
+  wavesurfer: WaveSurfer | null;
   startListening: () => Promise<void>;
   stopListening: () => void;
 }
 
-const useDeepgramSTT = (): UseDeepgramSTTResult => {
-  const [transcript, setTranscript] = useState('');
-  const [isListening, setIsListening] = useState(false);
+// Custom hook to fetch API key
+const useApiKey = () => {
+  const [apiKey, setApiKey] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const [deepgramSocket, setDeepgramSocket] = useState<WebSocket | null>(null);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      try {
+        const response = await fetch('api/key');
+        const data = await response.json();
 
-  const startListening = useCallback(async () => {
-    if (!navigator.mediaDevices.getUserMedia) {
-      setError(new Error('getUserMedia is not supported in this browser'));
-      return;
-    }
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to get API key');
+        }
 
-    try {
-      setError(null);
-      setTranscript('');
-      setIsListening(true);
-
-      // Fetch temporary API key from the backend
-      const response = await fetch(`${backendUrl}/key`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to get API key');
+        setApiKey(data.key);
+      } catch (err) {
+        console.error(err);
+        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       }
+    };
 
-      const apiKey = data.key;
+    fetchApiKey();
+  }, []);
 
-      // Get microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+  return { apiKey, error };
+};
 
-      // Open WebSocket connection
-      const deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?language=en-US&model=nova&smart_format=true`, ['token', apiKey]);
+// Custom hook to initialize WaveSurfer
+const useWaveSurfer = () => {
+  const waveSurferRef = useRef<WaveSurfer | null>(null);
+  const recordPluginRef = useRef<RecordPlugin | null>(null);
 
-      deepgramSocket.onopen = () => {
-        console.log('WebSocket connection opened');
-        mediaRecorder.start(250);
-      };
+  useEffect(() => {
+    const ws = WaveSurfer.create({
+      container: '#waveform',
+      waveColor: 'rgb(200, 0, 200)',
+      progressColor: 'rgb(100, 0, 100)',
+      height: 100,
+      barWidth: 2,
+      barGap: 2,
+    });
 
-      deepgramSocket.onmessage = (message) => {
-        const data = JSON.parse(message.data);
-        if (data.channel && data.channel.alternatives && data.channel.alternatives[0]) {
-          const { transcript } = data.channel.alternatives[0];
-          if (transcript) {
-            setTranscript((prev) => prev + ' ' + transcript);
+    const record = ws.registerPlugin(RecordPlugin.create({
+      scrollingWaveform: false,
+      renderRecordedAudio: false,
+    }));
+
+    waveSurferRef.current = ws;
+    recordPluginRef.current = record;
+
+    return () => {
+      ws.destroy();
+    };
+  }, []);
+
+  return { waveSurfer: waveSurferRef.current, recordPlugin: recordPluginRef.current };
+};
+
+// Custom hook to manage Deepgram live client
+const useDeepgramLiveClient = (
+  apiKey: string | null,
+  onTranscript: (transcript: string) => void,
+  onError: (error: Error) => void
+) => {
+  const liveClientRef = useRef<LiveClient | null>(null);
+
+  const initDeepgram = useCallback(() => {
+    return new Promise<void>((resolve, reject) => {
+      if (!apiKey) {
+        reject(new Error('API key is not available'));
+        return;
+      }
+  
+      const deepgram = createClient(apiKey);
+      const live = deepgram.listen.live({
+        language: 'en-GB',
+        model: 'nova',
+        smart_format: true,
+        diarize: true,
+        filler_words: true,
+        measurements: true,
+        profanity_filter: false,
+        keywords: ['integrevise'],
+      });
+  
+      live.on(LiveTranscriptionEvents.Open, () => {
+        console.log('Connection opened');
+        resolve();
+      });
+  
+      live.on(LiveTranscriptionEvents.Error, (error) => {
+        console.error('Deepgram error:', error);
+        onError(new Error('Transcription error'));
+        reject(error);
+      });
+  
+      live.on(LiveTranscriptionEvents.Transcript, (data) => {
+        const transcriptPart = data.channel?.alternatives?.[0]?.transcript;
+        if (transcriptPart) {
+          onTranscript(transcriptPart);
+        }
+      });
+  
+      liveClientRef.current = live;
+    });
+  }, [apiKey, onTranscript, onError]);
+
+  return { liveClientRef, initDeepgram };
+};
+
+// Custom hook to handle media recording
+const useMediaRecorder = (
+  liveClientRef: React.MutableRefObject<LiveClient | null>,
+  onAudioData: (url: string) => void,
+  onError: (error: Error) => void
+) => {
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  const startRecording = useCallback((stream: MediaStream) => {
+    try {
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus',
+      });
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+          if (liveClientRef.current?.getReadyState() === WebSocket.OPEN) {
+            liveClientRef.current.send(event.data);
           }
         }
       };
 
-      deepgramSocket.onerror = (event) => {
-        console.error('WebSocket error', event);
-        setError(new Error('WebSocket error'));
-        setIsListening(false);
-      };
-
-      deepgramSocket.onclose = () => {
-        console.log('WebSocket connection closed');
-        setIsListening(false);
-      };
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && deepgramSocket.readyState === WebSocket.OPEN) {
-          deepgramSocket.send(event.data);
-        }
-      };
-
       mediaRecorder.onstop = () => {
-        if (deepgramSocket.readyState === WebSocket.OPEN) {
-          deepgramSocket.close();
+        if (liveClientRef.current?.getReadyState() === WebSocket.OPEN) {
+          liveClientRef.current.requestClose();
         }
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' });
+        const url = URL.createObjectURL(audioBlob);
+        onAudioData(url);
+        audioChunksRef.current = [];
       };
 
-      setMediaRecorder(mediaRecorder);
-      setDeepgramSocket(deepgramSocket);
-    } catch (err: unknown) {
+      mediaRecorder.start(250);
+    } catch (err) {
+      console.error(err);
+      onError(err instanceof Error ? err : new Error('An unknown error occurred'));
+    }
+  }, [liveClientRef, onAudioData, onError]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current?.state !== 'inactive') {
+      mediaRecorderRef.current?.stop();
+    }
+  }, []);
+
+  return { startRecording, stopRecording };
+};
+
+const useDeepgramSTT = (): UseDeepGramSTTResult => {
+  const [transcript, setTranscript] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const { apiKey } = useApiKey();
+  const { waveSurfer, recordPlugin } = useWaveSurfer();
+  const { liveClientRef, initDeepgram } = useDeepgramLiveClient(
+    apiKey,
+    (part) => setTranscript((prev) => prev + ' ' + part),
+    setError
+  );
+  const { startRecording, stopRecording } = useMediaRecorder(
+    liveClientRef,
+    setAudioURL,
+    setError
+  );
+
+
+  const startListening = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia || !apiKey) {
+      setError(new Error('Required APIs are not available'));
+      return;
+    }
+  
+    try {
+      setError(null);
+      setTranscript('');
+      setIsListening(true);
+      setAudioURL(null);
+  
+      await initDeepgram(); // Wait for Deepgram connection
+  
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+  
+      await recordPlugin?.startRecording();
+      startRecording(stream);
+  
+    } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setIsListening(false);
     }
-  }, [backendUrl]);
+  }, [apiKey, initDeepgram, recordPlugin, startRecording]);
 
   const stopListening = useCallback(() => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-    }
-    if (deepgramSocket && deepgramSocket.readyState === WebSocket.OPEN) {
-      deepgramSocket.close();
-    }
+    stopRecording();
+    liveClientRef.current?.requestClose();
+    recordPlugin?.stopRecording();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
     setIsListening(false);
-    setMediaRecorder(null);
-    setDeepgramSocket(null);
-  }, [mediaRecorder, deepgramSocket]);
+    streamRef.current = null;
+  }, [stopRecording, liveClientRef, recordPlugin]);
 
   useEffect(() => {
     return () => {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-      }
-      if (deepgramSocket && deepgramSocket.readyState === WebSocket.OPEN) {
-        deepgramSocket.close();
-      }
+      stopListening();
     };
-  }, [mediaRecorder, deepgramSocket]);
+  }, [stopListening]);
 
   return {
     transcript,
     isListening,
     error,
+    audioURL,
+    wavesurfer: waveSurfer,
     startListening,
     stopListening,
   };

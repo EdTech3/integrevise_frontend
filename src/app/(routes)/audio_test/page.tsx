@@ -12,19 +12,8 @@ const AudioTest = () => {
                 <RiCheckboxCircleFill size={25} />
                 <h6>Facial Recognition</h6>
             </div>
-            {/* 
-            <div>
-                <p>My name is Chloe Decker and I am testing the speech-to-text feature on Integrevise on a Monday</p>
-
-                <div>
-
-                    <small>Say Something</small>
-                </div>
-            </div> */}
-
 
             <SpeechRecognition />
-
         </main>
     )
 }

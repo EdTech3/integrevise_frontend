@@ -2,6 +2,8 @@
 
 import React from 'react';
 import useDeepgramSTT from '@/hooks/useDeepgramSTT';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 const SpeechRecognition: React.FC = () => {
     const { transcript, isListening, error, startListening, stopListening } = useDeepgramSTT();
@@ -15,20 +17,26 @@ const SpeechRecognition: React.FC = () => {
     };
 
     return (
-        <div className="p-4 bg-gray-100 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">Speech Recognition</h2>
-            <button
-                onClick={handleButtonClick}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md"
-            >
-                {isListening ? 'Stop Listening' : 'Start Listening'}
-            </button>
-            {error && <p className="text-red-500 mt-2">Error: {error.message}</p>}
-            <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">Transcript:</h3>
-                <p className="whitespace-pre-wrap">{transcript}</p>
+        <Card className='max-w-2xl w-full mx-auto mt-20 p-6'>
+            <div className='flex flex-col items-center space-y-8'>
+                {!transcript && <p>Your transcribed text will appear here</p>}
+                {transcript && <p className="whitespace-pre-wrap">{transcript}</p>}
+
+                {/* WaveSurfer container */}
+                <div id="waveform" className="w-full" />
+
+                <Button
+                    onClick={handleButtonClick}
+                    className="text-center"
+                >
+                    {isListening ? 'Stop Recording' : 'Start Recording'}
+                </Button>
+
+                {error && (
+                    <p className="text-red-500">Error: {error.message}</p>
+                )}
             </div>
-        </div>
+        </Card>
     );
 };
 
