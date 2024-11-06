@@ -1,6 +1,6 @@
 import { createClient, LiveTranscriptionEvents, type LiveClient } from '@deepgram/sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import WaveSurfer from 'wavesurfer.js';
+import WaveSurfer, { WaveSurferOptions } from 'wavesurfer.js';
 import useWaveSurfer from './useWaveSurfer';
 
 interface UseDeepGramSTTResult {
@@ -140,14 +140,14 @@ const useMediaRecorder = (
   return { startRecording, stopRecording };
 };
 
-const useDeepgramSTT = (waveSurferContainer: string, deviceId?: string): UseDeepGramSTTResult => {
+const useDeepgramSTT = (waveSurferOptions: WaveSurferOptions, deviceId?: string): UseDeepGramSTTResult => {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const { apiKey } = useApiKey();
-  const { waveSurfer, recordPlugin } = useWaveSurfer(waveSurferContainer)
+  const { waveSurfer, recordPlugin } = useWaveSurfer(waveSurferOptions)
   const { liveClientRef, initDeepgram } = useDeepgramLiveClient(
     apiKey,
     (part) => setTranscript((prev) => prev + ' ' + part),
@@ -185,7 +185,7 @@ const useDeepgramSTT = (waveSurferContainer: string, deviceId?: string): UseDeep
       });
       streamRef.current = stream;
   
-      await recordPlugin?.startRecording();
+      // await recordPlugin?.startRecording();
       startRecording(stream);
   
     } catch (err) {
@@ -193,7 +193,7 @@ const useDeepgramSTT = (waveSurferContainer: string, deviceId?: string): UseDeep
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setIsListening(false);
     }
-  }, [apiKey, deviceId, initDeepgram, recordPlugin, startRecording]);
+  }, [apiKey, deviceId, initDeepgram, startRecording]);
 
   const stopListening = useCallback(() => {
     stopRecording();

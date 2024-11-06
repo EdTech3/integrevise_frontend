@@ -1,6 +1,9 @@
+"use client"
+
 import React from 'react'
 import AISection from './components/AISection'
 import StudentSection from './components/StudentSection'
+
 
 const Viva = () => {
     return (
