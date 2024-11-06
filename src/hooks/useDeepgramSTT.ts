@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
 import { createClient, LiveTranscriptionEvents, type LiveClient } from '@deepgram/sdk';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
-import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js';
+import useWaveSurfer from './useWaveSurfer';
 
 interface UseDeepGramSTTResult {
   transcript: string;
   isListening: boolean;
   error: Error | null;
-  audioURL: string | null;
   wavesurfer: WaveSurfer | null;
   startListening: () => Promise<void>;
   stopListening: () => void;
@@ -41,36 +40,7 @@ const useApiKey = () => {
   return { apiKey, error };
 };
 
-// Custom hook to initialize WaveSurfer
-const useWaveSurfer = () => {
-  const waveSurferRef = useRef<WaveSurfer | null>(null);
-  const recordPluginRef = useRef<RecordPlugin | null>(null);
 
-  useEffect(() => {
-    const ws = WaveSurfer.create({
-      container: '#waveform',
-      waveColor: 'rgb(200, 0, 200)',
-      progressColor: 'rgb(100, 0, 100)',
-      height: 100,
-      barWidth: 2,
-      barGap: 2,
-    });
-
-    const record = ws.registerPlugin(RecordPlugin.create({
-      scrollingWaveform: false,
-      renderRecordedAudio: false,
-    }));
-
-    waveSurferRef.current = ws;
-    recordPluginRef.current = record;
-
-    return () => {
-      ws.destroy();
-    };
-  }, []);
-
-  return { waveSurfer: waveSurferRef.current, recordPlugin: recordPluginRef.current };
-};
 
 // Custom hook to manage Deepgram live client
 const useDeepgramLiveClient = (
@@ -127,7 +97,6 @@ const useDeepgramLiveClient = (
 // Custom hook to handle media recording
 const useMediaRecorder = (
   liveClientRef: React.MutableRefObject<LiveClient | null>,
-  onAudioData: (url: string) => void,
   onError: (error: Error) => void
 ) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -153,11 +122,6 @@ const useMediaRecorder = (
         if (liveClientRef.current?.getReadyState() === WebSocket.OPEN) {
           liveClientRef.current.requestClose();
         }
-
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' });
-        const url = URL.createObjectURL(audioBlob);
-        onAudioData(url);
-        audioChunksRef.current = [];
       };
 
       mediaRecorder.start(250);
@@ -165,7 +129,7 @@ const useMediaRecorder = (
       console.error(err);
       onError(err instanceof Error ? err : new Error('An unknown error occurred'));
     }
-  }, [liveClientRef, onAudioData, onError]);
+  }, [liveClientRef, onError]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current?.state !== 'inactive') {
@@ -176,23 +140,22 @@ const useMediaRecorder = (
   return { startRecording, stopRecording };
 };
 
-const useDeepgramSTT = (): UseDeepGramSTTResult => {
+const useDeepgramSTT = (waveSurferContainer: string, deviceId?: string): UseDeepGramSTTResult => {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [audioURL, setAudioURL] = useState<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const { apiKey } = useApiKey();
-  const { waveSurfer, recordPlugin } = useWaveSurfer();
+  const { waveSurfer, recordPlugin } = useWaveSurfer(waveSurferContainer)
   const { liveClientRef, initDeepgram } = useDeepgramLiveClient(
     apiKey,
     (part) => setTranscript((prev) => prev + ' ' + part),
     setError
-  );
+  )
+
   const { startRecording, stopRecording } = useMediaRecorder(
     liveClientRef,
-    setAudioURL,
     setError
   );
 
@@ -207,11 +170,14 @@ const useDeepgramSTT = (): UseDeepGramSTTResult => {
       setError(null);
       setTranscript('');
       setIsListening(true);
-      setAudioURL(null);
   
       await initDeepgram(); // Wait for Deepgram connection
-  
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: deviceId ? { exact: deviceId } : undefined,
+        },
+      });
       streamRef.current = stream;
   
       await recordPlugin?.startRecording();
@@ -222,7 +188,7 @@ const useDeepgramSTT = (): UseDeepGramSTTResult => {
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setIsListening(false);
     }
-  }, [apiKey, initDeepgram, recordPlugin, startRecording]);
+  }, [apiKey, deviceId, initDeepgram, recordPlugin, startRecording]);
 
   const stopListening = useCallback(() => {
     stopRecording();
@@ -243,7 +209,6 @@ const useDeepgramSTT = (): UseDeepGramSTTResult => {
     transcript,
     isListening,
     error,
-    audioURL,
     wavesurfer: waveSurfer,
     startListening,
     stopListening,

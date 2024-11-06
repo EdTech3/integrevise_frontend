@@ -5,7 +5,7 @@ import SpeechRecognition from './components/SpeechRecognition';
 
 const AudioTest = () => {
     return (
-        <main>
+        <main className='flex flex-col'>
             <Logo />
 
             <div className='flex flex-row space-x-2 items-center'>

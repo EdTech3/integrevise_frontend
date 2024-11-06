@@ -3,7 +3,7 @@ import Logo from "@/components/shared/Logo"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import CameraFeed from "./components/CameraFeed"
 import Header from "./components/Header"
 import ProgressTimeline from "./components/ProgressTimeline"
@@ -12,8 +12,8 @@ import { Stage } from "./components/type"
 import { STAGE_IDS } from "./constants"
 import useLoadModels from "./hooks/useLoadModels"
 import useMediaDevices from "./hooks/useMediaDevices"
-import { compareFaces, detectFaces } from "./utils/faceDetection"
 import { captureImage } from "./utils/captureImage"
+import { compareFaces, detectFaces } from "./utils/faceDetection"
 
 
 const FacialRecognition = () => {
@@ -112,11 +112,11 @@ const FacialRecognition = () => {
     };
   }, [modelsLoaded, updateStageStatus]);
 
-  useEffect(() => {
+  const handleRecognitionButtonClicked = () => {
     const returnedImage = handleCaptureImage()
     if (returnedImage) performFaceRecognition(returnedImage)
+  }
 
-  }, [performFaceRecognition])
 
   if (!isMethodPresent) return (
     <div>
@@ -134,6 +134,15 @@ const FacialRecognition = () => {
         <CameraFeed deviceId={deviceId} updateStageStatus={updateStageStatus} ref={videoRef} />
         <canvas ref={canvasRef} style={{ display: "none" }} />
       </div>
+
+      <Button
+        onClick={handleRecognitionButtonClicked}
+        disabled={stages[0].status === "loading" || stages[0].status === "successful"}
+        variant={"outline"}
+        className="w-full"
+      >
+        {stages[0].status === "failed" ? "Try again?" : "Start Recognition"}
+      </Button>
 
       <Button
         disabled={stages[1].status !== "successful"}
