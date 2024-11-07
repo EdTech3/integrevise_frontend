@@ -27,11 +27,11 @@ const SpeechRecognition: React.FC = () => {
 
     const getTranscribeButtonText = () => {
         if (isListening) {
-            return "Stop Transcribing"
+            return "Stop Microphone Test"
         } else if (!isListening && transcript) {
-            return "Restart Transcribing"
+            return "Restart Microphone Test"
         } else {
-            return "Start Transcribing"
+            return "Start Microphone Test"
         }
     }
 
@@ -63,7 +63,7 @@ const SpeechRecognition: React.FC = () => {
                     <Button
                         variant={"outline"}
                         onClick={handleButtonClick}
-                        className={`text-center w-full bg-secondary-100 text-foreground ${isListening ? "animate-pulse" : ""}`}
+                        className={`text-center w-full text-foreground ${isListening ? "bg-amber-400 hover:bg-amber-400/90" : ""}`}
                     >
                         {getTranscribeButtonText()}
                     </Button>

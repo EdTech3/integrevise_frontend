@@ -1,3 +1,4 @@
+import { infoToast } from '@/lib/toast';
 import { createClient, LiveTranscriptionEvents, type LiveClient } from '@deepgram/sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -153,7 +154,7 @@ const useDeepgramSTT = (deviceId?: string) => {
     }
 
     if (!apiKey) {
-      console.warn('API key is either loading or not available');
+      infoToast('Getting Session Details...');
       return;
     }
   

@@ -16,6 +16,7 @@ import { captureImage } from "./utils/captureImage"
 import { compareFaces, detectFaces } from "./utils/faceDetection"
 import Container from "@/components/shared/Container"
 import PreAssessmentCheckTimeline from "@/components/shared/PreAssessmentCheckTimeline"
+import { errorToast, successToast } from "@/lib/toast"
 
 
 const FacialRecognition = () => {
@@ -87,13 +88,13 @@ const FacialRecognition = () => {
       const referenceDetections = await detectFaces(referenceImageElement);
 
       if (capturedDetections.length > 1) {
-        alert('Multiple faces detected in the captured image. Please ensure only one face is visible.');
+        errorToast('Multiple faces detected in the captured image. Please ensure only one face is visible.');
         updateStageStatus(STAGE_IDS.FACE_RECOGNIZED, 'failed');
         return;
       }
 
       if (referenceDetections.length > 1) {
-        alert('Multiple faces detected in the reference image. Please ensure only one face is visible.');
+        errorToast('Multiple faces detected in the reference image. Please ensure only one face is visible.');
         updateStageStatus(STAGE_IDS.FACE_RECOGNIZED, 'failed');
         return;
       }
@@ -102,13 +103,13 @@ const FacialRecognition = () => {
         const distance = compareFaces(capturedDetections[0].descriptor, referenceDetections[0].descriptor);
         if (distance < 0.6) {
           updateStageStatus(STAGE_IDS.FACE_RECOGNIZED, 'successful');
-          alert('Face Matched');
+          successToast('Face Matched Successfully!');
         } else {
-          alert('Face not matched!');
+          errorToast('Face not matched. Please try again.');
           updateStageStatus(STAGE_IDS.FACE_RECOGNIZED, 'failed');
         }
       } else {
-        alert('No face detected in one of the images.');
+        errorToast('No face detected in one of the images.');
         updateStageStatus(STAGE_IDS.FACE_RECOGNIZED, 'failed');
       }
     };
