@@ -9,9 +9,6 @@ import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 
 
-
-
-
 const SpeechRecognition: React.FC = () => {
     const { transcript, isListening, error, startListening, stopListening } = useDeepgramSTT();
     const [deviceId, setDeviceId] = useState<string | null>(null)
@@ -35,8 +32,6 @@ const SpeechRecognition: React.FC = () => {
                 {!transcript && <p className='text-gray-600 text-lg'>Your transcribed text will appear here</p>}
                 {transcript && <p className="whitespace-pre-wrap text-center text-foreground text-lg">{transcript}</p>}
 
-                {/* WaveSurfer container */}
-                <div id="waveform" className="w-[120px] mx-auto min-h-[80px] border-none" />
 
                 <div className='space-y-2.5 w-full'>
                     <Button

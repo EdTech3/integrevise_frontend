@@ -1,14 +1,6 @@
 import { createClient, LiveTranscriptionEvents, type LiveClient } from '@deepgram/sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-interface UseDeepGramSTTResult {
-  transcript: string;
-  isListening: boolean;
-  error: Error | null;
-  startListening: () => Promise<void>;
-  stopListening: () => void;
-}
-
 // Custom hook to fetch API key
 export const useApiKey = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -36,8 +28,6 @@ export const useApiKey = () => {
 
   return { apiKey, error };
 };
-
-
 
 
 // Custom hook to manage Deepgram live client
@@ -104,6 +94,7 @@ const useMediaRecorder = (
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus',
       });
+
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -120,7 +111,7 @@ const useMediaRecorder = (
         }
       };
 
-      mediaRecorder.start(200);
+      mediaRecorder.start(150);
     } catch (err) {
       console.error(err);
       onError(err instanceof Error ? err : new Error('An unknown error occurred'));
@@ -133,10 +124,10 @@ const useMediaRecorder = (
     }
   }, []);
 
-  return { startRecording, stopRecording };
+  return { startRecording, stopRecording, mediaRecorder: mediaRecorderRef.current };
 };
 
-const useDeepgramSTT = (deviceId?: string): UseDeepGramSTTResult => {
+const useDeepgramSTT = (deviceId?: string) => {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -149,7 +140,7 @@ const useDeepgramSTT = (deviceId?: string): UseDeepGramSTTResult => {
     setError
   )
 
-  const { startRecording, stopRecording } = useMediaRecorder(
+  const { startRecording, stopRecording, mediaRecorder } = useMediaRecorder(
     liveClientRef,
     setError
   );
@@ -209,6 +200,7 @@ const useDeepgramSTT = (deviceId?: string): UseDeepGramSTTResult => {
     error,
     startListening,
     stopListening,
+    mediaRecorder,
   };
 };
 
