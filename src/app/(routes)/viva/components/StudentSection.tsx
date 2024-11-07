@@ -14,7 +14,7 @@ const waveSurferOption: WaveSurferOptions = {
 
 
 const StudentSection = () => {
-    const { transcript, isListening, error, startListening, stopListening } = useDeepgramSTT(waveSurferOption);
+    const { transcript, isListening, startListening, stopListening } = useDeepgramSTT(waveSurferOption);
 
     const handleButtonClick = () => {
         if (isListening) {
@@ -40,9 +40,9 @@ const StudentSection = () => {
                     </p>
                 }
             </div>
-            <div id='waveform_viva' className='w-full min-h-[60px] border-none' />
             <div className='flex justify-between items-center'>
                 <Logo type="light" width={140} height={140} />
+                <div id='waveform_viva' className='w-[120px] h-[30px] border-none self-center' />
                 <StudentAvatar />
             </div>
         </section>

@@ -13,7 +13,7 @@ interface UseDeepGramSTTResult {
 }
 
 // Custom hook to fetch API key
-const useApiKey = () => {
+export const useApiKey = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
@@ -42,6 +42,7 @@ const useApiKey = () => {
 
 
 
+
 // Custom hook to manage Deepgram live client
 const useDeepgramLiveClient = (
   apiKey: string | null,
@@ -59,7 +60,7 @@ const useDeepgramLiveClient = (
   
       const deepgram = createClient(apiKey);
       const live = deepgram.listen.live({
-        language: 'en-GB',
+        language: 'en-US',
         model: 'nova',
         smart_format: true,
         diarize: true,
@@ -100,7 +101,6 @@ const useMediaRecorder = (
   onError: (error: Error) => void
 ) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
 
   const startRecording = useCallback((stream: MediaStream) => {
     try {
@@ -111,7 +111,6 @@ const useMediaRecorder = (
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
           if (liveClientRef.current?.getReadyState() === WebSocket.OPEN) {
             liveClientRef.current.send(event.data);
           }
@@ -124,7 +123,7 @@ const useMediaRecorder = (
         }
       };
 
-      mediaRecorder.start(250);
+      mediaRecorder.start(200);
     } catch (err) {
       console.error(err);
       onError(err instanceof Error ? err : new Error('An unknown error occurred'));
@@ -185,7 +184,7 @@ const useDeepgramSTT = (waveSurferOptions: WaveSurferOptions, deviceId?: string)
       });
       streamRef.current = stream;
   
-      // await recordPlugin?.startRecording();
+      await recordPlugin?.startRecording();
       startRecording(stream);
   
     } catch (err) {
@@ -193,7 +192,7 @@ const useDeepgramSTT = (waveSurferOptions: WaveSurferOptions, deviceId?: string)
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setIsListening(false);
     }
-  }, [apiKey, deviceId, initDeepgram, startRecording]);
+  }, [apiKey, deviceId, initDeepgram, recordPlugin, startRecording]);
 
   const stopListening = useCallback(() => {
     stopRecording();

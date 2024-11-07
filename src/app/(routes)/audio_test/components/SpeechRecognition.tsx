@@ -42,7 +42,7 @@ const SpeechRecognition: React.FC = () => {
                 {transcript && <p className="whitespace-pre-wrap text-center text-foreground text-lg">{transcript}</p>}
 
                 {/* WaveSurfer container */}
-                <div id="waveform" className="w-full min-h-[80px] border-none" />
+                <div id="waveform" className="w-[120px] mx-auto min-h-[80px] border-none" />
 
                 <div className='space-y-2.5 w-full'>
                     <Button

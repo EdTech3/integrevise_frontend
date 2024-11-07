@@ -139,7 +139,6 @@ const FacialRecognition = () => {
 
         <Button
           onClick={handleRecognitionButtonClicked}
-          disabled={stages[0].status === "loading" || stages[0].status === "successful"}
           variant={"outline"}
           className="w-full"
         >
