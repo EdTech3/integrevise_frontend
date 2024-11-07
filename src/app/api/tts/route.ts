@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const response = await deepgram.speak.request(
       { text },
       {
-        model: 'aura-athena-en',
+        model: 'aura-asteria-en',
         encoding: 'linear16',
         container: 'wav',
       }
