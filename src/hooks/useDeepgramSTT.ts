@@ -201,6 +201,7 @@ const useDeepgramSTT = (deviceId?: string) => {
     startListening,
     stopListening,
     mediaRecorder,
+    audioStream: streamRef.current,
   };
 };
 

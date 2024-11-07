@@ -4,6 +4,12 @@ import { RiCheckboxCircleFill } from "react-icons/ri";
 import SpeechRecognition from './components/SpeechRecognition';
 import Container from '@/components/shared/Container';
 
+//TODO: Add a recording indicator
+//TODO: Add a functionality to either append to the current transcript or start a new one
+//TODO: Add more controls to show user the current state of the audio stream
+
+
+
 const AudioTest = () => {
     return (
         <Container>

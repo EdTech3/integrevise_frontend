@@ -2,10 +2,11 @@ import Logo from '@/components/shared/Logo'
 import StudentAvatar from './StudentAvatar'
 import useDeepgramSTT from '@/hooks/useDeepgramSTT'
 import { FaMicrophoneAlt } from "react-icons/fa";
+import AudioVisualizer from '@/components/shared/Audiovisualizer';
 
 
 const StudentSection = () => {
-    const { transcript, isListening, startListening, stopListening } = useDeepgramSTT();
+    const { transcript, isListening, startListening, stopListening, audioStream } = useDeepgramSTT();
 
     const handleButtonClick = () => {
         if (isListening) {
@@ -33,7 +34,14 @@ const StudentSection = () => {
             </div>
             <div className='flex justify-between items-center'>
                 <Logo type="light" width={140} height={140} />
-                <div id='waveform_viva' className='w-[120px] h-[30px] border-none self-center' />
+                <AudioVisualizer
+                    audioStream={audioStream}
+                    isListening={isListening}
+                    width={200}
+                    height={50}
+                    lineWidth={1}
+                    strokeStyle="#fff"
+                />
                 <StudentAvatar />
             </div>
         </section>

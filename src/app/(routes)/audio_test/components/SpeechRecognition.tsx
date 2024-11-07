@@ -7,10 +7,11 @@ import useMediaDevices from '../../facial_recognition/hooks/useMediaDevices';
 import AudioSelector from './AudioSelector';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
+import AudioVisualizer from '@/components/shared/Audiovisualizer';
 
 
 const SpeechRecognition: React.FC = () => {
-    const { transcript, isListening, error, startListening, stopListening } = useDeepgramSTT();
+    const { transcript, isListening, error, audioStream, startListening, stopListening } = useDeepgramSTT();
     const [deviceId, setDeviceId] = useState<string | null>(null)
     const devices = useMediaDevices(deviceId, setDeviceId, "audioinput")
 
@@ -31,6 +32,16 @@ const SpeechRecognition: React.FC = () => {
             <div className='flex flex-col items-center space-y-8'>
                 {!transcript && <p className='text-gray-600 text-lg'>Your transcribed text will appear here</p>}
                 {transcript && <p className="whitespace-pre-wrap text-center text-foreground text-lg">{transcript}</p>}
+
+
+                <AudioVisualizer
+                    audioStream={audioStream}
+                    isListening={isListening}
+                    width={600}
+                    height={150}
+                    lineWidth={1}
+                    strokeStyle="#203640"
+                />
 
 
                 <div className='space-y-2.5 w-full'>
