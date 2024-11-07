@@ -25,19 +25,34 @@ const SpeechRecognition: React.FC = () => {
         }
     };
 
+    const getTranscribeButtonText = () => {
+        if (isListening) {
+            return "Stop Transcribing"
+        } else if (!isListening && transcript) {
+            return "Restart Transcribing"
+        } else {
+            return "Start Transcribing"
+        }
+    }
+
     return (
         <Card className='w-full mx-auto mt-10 p-6 flex flex-col space-y-14'>
             <AudioSelector setDeviceId={setDeviceId} deviceId={deviceId} devices={devices} />
 
             <div className='flex flex-col items-center space-y-8'>
-                {!transcript && <p className='text-gray-600 text-lg'>Your transcribed text will appear here</p>}
-                {transcript && <p className="whitespace-pre-wrap text-center text-foreground text-lg">{transcript}</p>}
+                {transcript && <p className="text-center text-base sm:text-lg whitespace-pre-wrap leading-tight text-foreground">{transcript}</p>}
+                {!transcript && !isListening && <p className='text-center text-base sm:text-lg whitespace-pre-wrap leading-tight text-foreground'>Your transcribed text will appear here</p>}
+                {!transcript && isListening &&
+                    <p className="text-center text-base sm:text-lg whitespace-pre-wrap leading-tight text-foreground">
+                        Listening...
+                    </p>
+                }
 
 
                 <AudioVisualizer
                     audioStream={audioStream}
                     isListening={isListening}
-                    width={600}
+                    containerClassName='w-full lg:w-1/2'
                     height={150}
                     lineWidth={1}
                     strokeStyle="#203640"
@@ -48,16 +63,16 @@ const SpeechRecognition: React.FC = () => {
                     <Button
                         variant={"outline"}
                         onClick={handleButtonClick}
-                        className="text-center w-full"
+                        className={`text-center w-full bg-secondary-100 text-foreground ${isListening ? "animate-pulse" : ""}`}
                     >
-                        {isListening ? 'Stop Recording' : 'Start Recording'}
+                        {getTranscribeButtonText()}
                     </Button>
                     <Button
                         disabled={!transcript}
                         onClick={() => router.push("/viva")}
                         className="text-center w-full"
                     >
-                        Continue
+                        Start Assessment
                     </Button>
 
                 </div>
@@ -70,4 +85,4 @@ const SpeechRecognition: React.FC = () => {
     );
 };
 
-export default SpeechRecognition;
+export default SpeechRecognition

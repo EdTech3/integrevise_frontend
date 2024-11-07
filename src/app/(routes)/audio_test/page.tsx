@@ -1,8 +1,8 @@
-import Logo from '@/components/shared/Logo'
-import React from 'react'
-import { RiCheckboxCircleFill } from "react-icons/ri";
-import SpeechRecognition from './components/SpeechRecognition';
+"use client"
 import Container from '@/components/shared/Container';
+import Logo from '@/components/shared/Logo';
+import PreAssessmentCheckTimeline from '@/components/shared/PreAssessmentCheckTimeline';
+import SpeechRecognition from './components/SpeechRecognition';
 
 //TODO: Add a recording indicator
 //TODO: Add a functionality to either append to the current transcript or start a new one
@@ -13,13 +13,10 @@ import Container from '@/components/shared/Container';
 const AudioTest = () => {
     return (
         <Container>
-            <main className='flex flex-col'>
-                <Logo />
+            <main className='flex flex-col pt-7'>
+                <Logo className='sm:mb-5 mb-10' />
 
-                <div className='flex flex-row space-x-2 items-center'>
-                    <RiCheckboxCircleFill size={25} />
-                    <h6>Facial Recognition</h6>
-                </div>
+                <PreAssessmentCheckTimeline selectedId="microphone-test" />
 
                 <SpeechRecognition />
             </main>

@@ -3,19 +3,19 @@ import React, { useEffect, useRef } from 'react';
 interface AudioVisualizerProps {
     audioStream: MediaStream | null;
     isListening: boolean;
-    width?: number;
     height?: number;
     lineWidth?: number;
     strokeStyle?: string;
+    containerClassName?: string; // New prop for custom class names
 }
 
 const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     audioStream,
     isListening,
-    width = 500,
     height = 100,
     lineWidth = 2,
     strokeStyle = '#4F46E5',
+    containerClassName = '', // Default to an empty string
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationFrameIdRef = useRef<number>();
@@ -24,10 +24,15 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
         const canvas = canvasRef.current;
         if (!canvas) return;
         const canvasContext = canvas.getContext('2d')!;
-        const WIDTH = canvas.width;
-        const HEIGHT = canvas.height;
+
+        const resizeCanvas = () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = height;
+        };
 
         const drawFlatLine = () => {
+            const WIDTH = canvas.width;
+            const HEIGHT = canvas.height;
             canvasContext.clearRect(0, 0, WIDTH, HEIGHT);
             canvasContext.lineWidth = lineWidth;
             canvasContext.strokeStyle = strokeStyle;
@@ -37,24 +42,9 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
             canvasContext.stroke();
         };
 
-        drawFlatLine(); // Always draw a flat line initially
-
-        if (!audioStream || !isListening) {
-            return;
-        }
-
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const analyser = audioContext.createAnalyser();
-        const source = audioContext.createMediaStreamSource(audioStream);
-
-        source.connect(analyser);
-
-        analyser.smoothingTimeConstant = 0.8;
-        analyser.fftSize = 1024;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
         const draw = () => {
+            const WIDTH = canvas.width;
+            const HEIGHT = canvas.height;
             animationFrameIdRef.current = requestAnimationFrame(draw);
 
             analyser.getByteTimeDomainData(dataArray);
@@ -86,7 +76,27 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
             canvasContext.stroke();
         };
 
+        resizeCanvas();
+        drawFlatLine(); // Always draw a flat line initially
+
+        if (!audioStream || !isListening) {
+            return;
+        }
+
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(audioStream);
+
+        source.connect(analyser);
+
+        analyser.smoothingTimeConstant = 0.8;
+        analyser.fftSize = 1024;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
         draw();
+
+        window.addEventListener('resize', resizeCanvas);
 
         return () => {
             if (animationFrameIdRef.current) {
@@ -95,10 +105,15 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
             source.disconnect();
             analyser.disconnect();
             audioContext.close();
+            window.removeEventListener('resize', resizeCanvas);
         };
-    }, [audioStream, isListening, lineWidth, strokeStyle]);
+    }, [audioStream, isListening, lineWidth, strokeStyle, height]);
 
-    return <canvas ref={canvasRef} width={width} height={height} />;
+    return (
+        <div className={containerClassName}>
+            <canvas ref={canvasRef} style={{ width: '100%', height: `${height}px` }} />
+        </div>
+    );
 };
 
 export default AudioVisualizer;

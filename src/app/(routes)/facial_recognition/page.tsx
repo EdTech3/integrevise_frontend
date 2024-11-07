@@ -15,6 +15,7 @@ import useMediaDevices from "./hooks/useMediaDevices"
 import { captureImage } from "./utils/captureImage"
 import { compareFaces, detectFaces } from "./utils/faceDetection"
 import Container from "@/components/shared/Container"
+import PreAssessmentCheckTimeline from "@/components/shared/PreAssessmentCheckTimeline"
 
 
 const FacialRecognition = () => {
@@ -119,6 +120,12 @@ const FacialRecognition = () => {
   }
 
 
+  const getFacialRecognitionButtonText = () => {
+    if (stages[1].status === "failed") return "Try again?"
+    if (stages[1].status === "loading") return "Performing Recognition"
+    return "Start Recognition"
+  }
+
   if (!isMethodPresent) return (
     <div>
       <p>Please choose a communication method <Link href={"/communication_method_selection"}>here</Link></p>
@@ -129,6 +136,7 @@ const FacialRecognition = () => {
     <Container >
       <main className="py-2 min-h-screen flex flex-col space-y-4">
         <Logo />
+        <PreAssessmentCheckTimeline selectedId="facial-recognition" />
 
         <div className="relative overlay rounded-lg overflow-hidden text-gray-200">
           <Header deviceId={deviceId} devices={devices} name="Chloe Decker" setDeviceId={setDeviceId} />
@@ -139,10 +147,11 @@ const FacialRecognition = () => {
 
         <Button
           onClick={handleRecognitionButtonClicked}
+          disabled={stages[1].status === "loading" || stages[1].status === "successful"}
           variant={"outline"}
-          className="w-full"
+          className="text-center w-full bg-secondary-100 text-foreground"
         >
-          {stages[0].status === "failed" ? "Try again?" : "Start Recognition"}
+          {getFacialRecognitionButtonText()}
         </Button>
 
         <Button
@@ -152,7 +161,7 @@ const FacialRecognition = () => {
           }}
           className="w-full"
         >
-          Continue
+          Test Microphone
         </Button>
 
         <ReferenceImage />
