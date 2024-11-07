@@ -1,13 +1,10 @@
 import { createClient, LiveTranscriptionEvents, type LiveClient } from '@deepgram/sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import WaveSurfer, { WaveSurferOptions } from 'wavesurfer.js';
-import useWaveSurfer from './useWaveSurfer';
 
 interface UseDeepGramSTTResult {
   transcript: string;
   isListening: boolean;
   error: Error | null;
-  wavesurfer: WaveSurfer | null;
   startListening: () => Promise<void>;
   stopListening: () => void;
 }
@@ -139,14 +136,13 @@ const useMediaRecorder = (
   return { startRecording, stopRecording };
 };
 
-const useDeepgramSTT = (waveSurferOptions: WaveSurferOptions, deviceId?: string): UseDeepGramSTTResult => {
+const useDeepgramSTT = (deviceId?: string): UseDeepGramSTTResult => {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const { apiKey } = useApiKey();
-  const { waveSurfer, recordPlugin } = useWaveSurfer(waveSurferOptions)
   const { liveClientRef, initDeepgram } = useDeepgramLiveClient(
     apiKey,
     (part) => setTranscript((prev) => prev + ' ' + part),
@@ -184,7 +180,6 @@ const useDeepgramSTT = (waveSurferOptions: WaveSurferOptions, deviceId?: string)
       });
       streamRef.current = stream;
   
-      await recordPlugin?.startRecording();
       startRecording(stream);
   
     } catch (err) {
@@ -192,16 +187,15 @@ const useDeepgramSTT = (waveSurferOptions: WaveSurferOptions, deviceId?: string)
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setIsListening(false);
     }
-  }, [apiKey, deviceId, initDeepgram, recordPlugin, startRecording]);
+  }, [apiKey, deviceId, initDeepgram, startRecording]);
 
   const stopListening = useCallback(() => {
     stopRecording();
     liveClientRef.current?.requestClose();
-    recordPlugin?.stopRecording();
     streamRef.current?.getTracks().forEach((track) => track.stop());
     setIsListening(false);
     streamRef.current = null;
-  }, [stopRecording, liveClientRef, recordPlugin]);
+  }, [stopRecording, liveClientRef]);
 
   useEffect(() => {
     return () => {
@@ -213,7 +207,6 @@ const useDeepgramSTT = (waveSurferOptions: WaveSurferOptions, deviceId?: string)
     transcript,
     isListening,
     error,
-    wavesurfer: waveSurfer,
     startListening,
     stopListening,
   };

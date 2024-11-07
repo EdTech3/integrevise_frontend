@@ -7,19 +7,13 @@ import useMediaDevices from '../../facial_recognition/hooks/useMediaDevices';
 import AudioSelector from './AudioSelector';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { WaveSurferOptions } from 'wavesurfer.js';
 
-const waveSurferOption: WaveSurferOptions = {
-    container: "#waveform",
-    waveColor: 'hsl(199, 33%, 19%)',
-    cursorWidth: 0,
-    barGap: 2,
-    height: "auto"
-}
+
+
 
 
 const SpeechRecognition: React.FC = () => {
-    const { transcript, isListening, error, startListening, stopListening } = useDeepgramSTT(waveSurferOption);
+    const { transcript, isListening, error, startListening, stopListening } = useDeepgramSTT();
     const [deviceId, setDeviceId] = useState<string | null>(null)
     const devices = useMediaDevices(deviceId, setDeviceId, "audioinput")
 

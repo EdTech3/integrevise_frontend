@@ -1,20 +1,11 @@
 import Logo from '@/components/shared/Logo'
 import StudentAvatar from './StudentAvatar'
-import { WaveSurferOptions } from 'wavesurfer.js'
 import useDeepgramSTT from '@/hooks/useDeepgramSTT'
 import { FaMicrophoneAlt } from "react-icons/fa";
 
-const waveSurferOption: WaveSurferOptions = {
-    container: "#waveform_viva",
-    waveColor: 'hsl(0, 0%, 99%)',
-    cursorWidth: 0,
-    barGap: 2,
-    height: "auto"
-}
-
 
 const StudentSection = () => {
-    const { transcript, isListening, startListening, stopListening } = useDeepgramSTT(waveSurferOption);
+    const { transcript, isListening, startListening, stopListening } = useDeepgramSTT();
 
     const handleButtonClick = () => {
         if (isListening) {
