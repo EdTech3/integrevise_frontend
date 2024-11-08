@@ -51,11 +51,11 @@ const useDeepgramLiveClient = (
         language: 'en-US',
         model: 'nova',
         smart_format: true,
-        diarize: true,
         filler_words: true,
         measurements: true,
         profanity_filter: false,
-        keywords: ['integrevise'],
+        interim_results: true,
+        keywords: ['integrevise']
       });
   
       live.on(LiveTranscriptionEvents.Open, () => {
@@ -71,8 +71,12 @@ const useDeepgramLiveClient = (
   
       live.on(LiveTranscriptionEvents.Transcript, (data) => {
         const transcriptPart = data.channel?.alternatives?.[0]?.transcript;
-        if (transcriptPart) {
-          onTranscript(transcriptPart);
+        if (transcriptPart && transcriptPart.trim()) {
+          if (!data.is_final) {
+            onTranscript(transcriptPart);
+          } else {
+            onTranscript('\n' + transcriptPart);
+          }
         }
       });
   
@@ -130,6 +134,7 @@ const useMediaRecorder = (
 
 const useDeepgramSTT = (deviceId?: string) => {
   const [transcript, setTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -137,9 +142,16 @@ const useDeepgramSTT = (deviceId?: string) => {
   const { apiKey } = useApiKey();
   const { liveClientRef, initDeepgram } = useDeepgramLiveClient(
     apiKey,
-    (part) => setTranscript((prev) => prev + ' ' + part),
+    (part) => {
+      if (part.startsWith('\n')) {
+        setInterimTranscript('');
+        setTranscript(prev => prev + part);
+      } else {
+        setInterimTranscript(part);
+      }
+    },
     setError
-  )
+  );
 
   const { startRecording, stopRecording, mediaRecorder } = useMediaRecorder(
     liveClientRef,
@@ -196,7 +208,8 @@ const useDeepgramSTT = (deviceId?: string) => {
   }, [stopListening]);
 
   return {
-    transcript,
+    transcript: transcript + (interimTranscript ? ' ' + interimTranscript : ''),
+    finalTranscript: transcript,
     isListening,
     error,
     startListening,

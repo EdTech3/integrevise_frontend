@@ -1,8 +1,9 @@
-import Logo from '@/components/shared/Logo'
-import StudentAvatar from './StudentAvatar'
-import useDeepgramSTT from '@/hooks/useDeepgramSTT'
-import { FaMicrophoneAlt } from "react-icons/fa";
 import AudioVisualizer from '@/components/shared/Audiovisualizer';
+import Logo from '@/components/shared/Logo';
+import useSpeechRecognition from '@/hooks/useSpeechRecognition';
+import { FaMicrophoneAlt } from "react-icons/fa";
+import StudentAvatar from './StudentAvatar';
+import useDeepgramSTT from '@/hooks/useDeepgramSTT';
 
 
 const StudentSection = () => {
@@ -19,7 +20,7 @@ const StudentSection = () => {
     return (
         <section className="w-full bg-secondary-100 text-foreground py-12 px-4 h-1/2 space-y-20 rounded-tr-3xl rounded-tl-3xl flex flex-col justify-between">
             <div>
-                <div className={`w-16 h-16 rounded-full bg-secondary-200 flex items-center cursor-pointer hover:scale-95 justify-center ${isListening ? "animate-pulse" : ""}`}>
+                <div className={`w-16 h-16 rounded-full bg-secondary-200 flex items-center cursor-pointer hover:scale-95 justify-center ${isListening ? "animate-pulse mb-6" : ""}`}>
                     <FaMicrophoneAlt onClick={handleButtonClick} className='text-3xl ' />
                 </div>
 
@@ -48,7 +49,7 @@ const StudentSection = () => {
                 <AudioVisualizer
                     audioStream={audioStream}
                     isListening={isListening}
-                    containerClassName='w-[200px]'
+                    containerClassName='w-full lg:w-[200px]'
                     height={50}
                     lineWidth={1}
                     strokeStyle="#203640"

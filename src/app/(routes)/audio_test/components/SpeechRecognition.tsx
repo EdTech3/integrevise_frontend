@@ -40,14 +40,13 @@ const SpeechRecognition: React.FC = () => {
             <AudioSelector setDeviceId={setDeviceId} deviceId={deviceId} devices={devices} />
 
             <div className='flex flex-col items-center space-y-8'>
-                {transcript && <p className="text-center text-base sm:text-lg whitespace-pre-wrap leading-tight text-foreground">{transcript}</p>}
+                {transcript && <p className="text-center text-base sm:text-lg leading-tight text-foreground">{transcript}</p>}
                 {!transcript && !isListening && <p className='text-center text-base sm:text-lg whitespace-pre-wrap leading-tight text-foreground'>Your transcribed text will appear here</p>}
                 {!transcript && isListening &&
                     <p className="text-center text-base sm:text-lg whitespace-pre-wrap leading-tight text-foreground">
                         Listening...
                     </p>
                 }
-
 
                 <AudioVisualizer
                     audioStream={audioStream}
@@ -57,7 +56,6 @@ const SpeechRecognition: React.FC = () => {
                     lineWidth={1}
                     strokeStyle="#203640"
                 />
-
 
                 <div className='space-y-2.5 w-full'>
                     <Button
