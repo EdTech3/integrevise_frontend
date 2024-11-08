@@ -19,6 +19,33 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationFrameIdRef = useRef<number>();
+    const audioContextRef = useRef<AudioContext>();
+    const analyserRef = useRef<AnalyserNode>();
+    const sourceRef = useRef<MediaStreamAudioSourceNode>();
+
+    // Initialize audio context and analyzer immediately when stream is available
+    useEffect(() => {
+        if (!audioStream) {
+            return;
+        };
+
+        // Create new audio context and analyzer for each stream
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        analyserRef.current = audioContextRef.current.createAnalyser();
+
+        // Adjust analyzer settings for better visualization
+        analyserRef.current.smoothingTimeConstant = 0.3; // Reduced from 0.8 for more responsive visualization
+        analyserRef.current.fftSize = 2048; // Increased from 1024 for better resolution
+
+        // Create and connect source
+        sourceRef.current = audioContextRef.current.createMediaStreamSource(audioStream);
+        sourceRef.current.connect(analyserRef.current);
+
+        return () => {
+            sourceRef.current?.disconnect();
+            audioContextRef.current?.close();
+        };
+    }, [audioStream]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -30,30 +57,31 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
             canvas.height = height;
         };
 
-        const drawFlatLine = () => {
-            const WIDTH = canvas.width;
-            const HEIGHT = canvas.height;
-            canvasContext.clearRect(0, 0, WIDTH, HEIGHT);
-            canvasContext.lineWidth = lineWidth;
-            canvasContext.strokeStyle = strokeStyle;
-            canvasContext.beginPath();
-            canvasContext.moveTo(0, HEIGHT / 2);
-            canvasContext.lineTo(WIDTH, HEIGHT / 2);
-            canvasContext.stroke();
-        };
-
         const draw = () => {
             const WIDTH = canvas.width;
             const HEIGHT = canvas.height;
-            animationFrameIdRef.current = requestAnimationFrame(draw);
 
-            analyser.getByteTimeDomainData(dataArray);
+            // Draw flat line when analyzer isn't ready or not listening
+            if (!analyserRef.current || !isListening || !audioStream) {
+                canvasContext.clearRect(0, 0, WIDTH, HEIGHT);
+                canvasContext.lineWidth = lineWidth;
+                canvasContext.strokeStyle = strokeStyle;
+                canvasContext.beginPath();
+                canvasContext.moveTo(0, HEIGHT / 2);
+                canvasContext.lineTo(WIDTH, HEIGHT / 2);
+                canvasContext.stroke();
+                animationFrameIdRef.current = requestAnimationFrame(draw);
+                return;
+            }
 
+            const bufferLength = analyserRef.current.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            analyserRef.current.getByteTimeDomainData(dataArray);
             canvasContext.clearRect(0, 0, WIDTH, HEIGHT);
 
             canvasContext.lineWidth = lineWidth;
             canvasContext.strokeStyle = strokeStyle;
-
             canvasContext.beginPath();
 
             const sliceWidth = WIDTH / bufferLength;
@@ -74,26 +102,11 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
 
             canvasContext.lineTo(WIDTH, HEIGHT / 2);
             canvasContext.stroke();
+
+            animationFrameIdRef.current = requestAnimationFrame(draw);
         };
 
         resizeCanvas();
-        drawFlatLine(); // Always draw a flat line initially
-
-        if (!audioStream || !isListening) {
-            return;
-        }
-
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const analyser = audioContext.createAnalyser();
-        const source = audioContext.createMediaStreamSource(audioStream);
-
-        source.connect(analyser);
-
-        analyser.smoothingTimeConstant = 0.8;
-        analyser.fftSize = 1024;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
         draw();
 
         window.addEventListener('resize', resizeCanvas);
@@ -102,12 +115,18 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
             if (animationFrameIdRef.current) {
                 cancelAnimationFrame(animationFrameIdRef.current);
             }
-            source.disconnect();
-            analyser.disconnect();
-            audioContext.close();
             window.removeEventListener('resize', resizeCanvas);
         };
-    }, [audioStream, isListening, lineWidth, strokeStyle, height]);
+    }, [isListening, lineWidth, strokeStyle, height, audioStream]);
+
+    // Cleanup effect
+    useEffect(() => {
+        return () => {
+            audioContextRef.current?.close();
+            sourceRef.current?.disconnect();
+            analyserRef.current?.disconnect();
+        };
+    }, []);
 
     return (
         <div className={containerClassName}>
