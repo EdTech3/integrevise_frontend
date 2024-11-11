@@ -12,11 +12,11 @@ import { Stage } from "./components/type"
 import { STAGE_IDS } from "./constants"
 import useLoadModels from "./hooks/useLoadModels"
 import useMediaDevices from "./hooks/useMediaDevices"
-import { captureImage } from "./utils/captureImage"
 import { compareFaces, detectFaces } from "./utils/faceDetection"
 import Container from "@/components/shared/Container"
 import PreAssessmentCheckTimeline from "@/components/shared/PreAssessmentCheckTimeline"
 import { errorToast, successToast } from "@/lib/toast"
+import Webcam from 'react-webcam'
 
 
 const FacialRecognition = () => {
@@ -24,10 +24,9 @@ const FacialRecognition = () => {
   const isMethodPresent = searchParams.has("method")
 
   const router = useRouter()
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [deviceId, setDeviceId] = useState<string | null>(null)
+  const webcamRef = useRef<Webcam>(null)
 
   const modelsLoaded = useLoadModels()
   const devices = useMediaDevices(deviceId, setDeviceId)
@@ -61,17 +60,16 @@ const FacialRecognition = () => {
     );
   }, [])
 
-  const handleCaptureImage = () => {
-    if (videoRef.current && canvasRef.current) {
-      const imageData = captureImage(videoRef.current, canvasRef.current);
-
-      if (imageData) {
-        setCapturedImage(imageData);
-        return imageData;
+  const handleCaptureImage = useCallback(() => {
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (imageSrc) {
+        setCapturedImage(imageSrc);
+        return imageSrc;
       }
     }
     return null;
-  };
+  }, []);
 
   const performFaceRecognition = useCallback(async (imageData: string) => {
     updateStageStatus(STAGE_IDS.FACE_RECOGNIZED, 'loading');
@@ -142,8 +140,7 @@ const FacialRecognition = () => {
         <div className="relative overlay rounded-lg overflow-hidden text-gray-200">
           <Header deviceId={deviceId} devices={devices} name="Chloe Decker" setDeviceId={setDeviceId} />
           <ProgressTimeline stages={stages} />
-          <CameraFeed deviceId={deviceId} updateStageStatus={updateStageStatus} ref={videoRef} />
-          <canvas ref={canvasRef} style={{ display: "none" }} />
+          <CameraFeed deviceId={deviceId} updateStageStatus={updateStageStatus} ref={webcamRef} />
         </div>
 
         <Button

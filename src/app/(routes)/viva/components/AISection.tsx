@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { errorToast } from '@/lib/toast';
 
 interface AISectionProps {
-    convertToSpeech: (text: string) => Promise<{ audio: any, streamDelay: number } | null>;
+    convertToSpeech: (text: string) => Promise<{ audio: HTMLAudioElement, streamDelay: number } | null>;
     error: string | null;
     isLoading: boolean;
     isSpeaking: boolean;
