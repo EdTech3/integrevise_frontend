@@ -3,11 +3,13 @@ import { useState } from 'react';
 interface UseDeepgramTTSResult {
   convertToSpeech: (text: string) => Promise<void>;
   isLoading: boolean;
-  error: string | null;
+  isSpeaking: boolean;
+  error: string | null; 
 }
 
-export function useDeepgramTTS(): UseDeepgramTTSResult {
-  const [isLoading, setIsLoading] = useState(false);
+export function useDeepgramTTS(onComplete?: () => void): UseDeepgramTTSResult {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const convertToSpeech = async (text: string) => {
@@ -31,10 +33,13 @@ export function useDeepgramTTS(): UseDeepgramTTSResult {
       const url = window.URL.createObjectURL(blob);
       const audio = new Audio(url);
       
+      setIsSpeaking(true);
       audio.play();
       
       audio.addEventListener('ended', () => {
         window.URL.revokeObjectURL(url);
+        setIsSpeaking(false);
+        onComplete?.();
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -43,5 +48,5 @@ export function useDeepgramTTS(): UseDeepgramTTSResult {
     }
   };
 
-  return { convertToSpeech, isLoading, error };
+  return { convertToSpeech, isLoading, isSpeaking, error };
 }

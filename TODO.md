@@ -1,4 +1,4 @@
-#Micro Todo
+# Micro Todo
 This are little features that would be implemented after every major feature has been implemented
 
 ## Audio Test

@@ -2,40 +2,12 @@ import { infoToast } from '@/lib/toast';
 import { createClient, LiveTranscriptionEvents, type LiveClient } from '@deepgram/sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Custom hook to fetch API key
-export const useApiKey = () => {
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchApiKey = async () => {
-      try {
-        const response = await fetch('api/key');
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to get API key');
-        }
-
-        setApiKey(data.key);
-      } catch (err) {
-        console.error(err);
-        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-      }
-    };
-
-    fetchApiKey();
-  }, []);
-
-  return { apiKey, error };
-};
-
-
 // Custom hook to manage Deepgram live client
 const useDeepgramLiveClient = (
   apiKey: string | null,
   onTranscript: (transcript: string) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  onSpeechEnd?: (lastWordEnd: number) => void
 ) => {
   const liveClientRef = useRef<LiveClient | null>(null);
 
@@ -55,6 +27,7 @@ const useDeepgramLiveClient = (
         measurements: true,
         profanity_filter: false,
         interim_results: true,
+        utterance_end_ms: 5000,
         keywords: ['integrevise']
       });
   
@@ -80,9 +53,15 @@ const useDeepgramLiveClient = (
         }
       });
   
+      live.on('UtteranceEnd', (data) => {
+        if (onSpeechEnd && data.last_word_end) {
+          onSpeechEnd(data.last_word_end);
+        }
+      });
+  
       liveClientRef.current = live;
     });
-  }, [apiKey, onTranscript, onError]);
+  }, [apiKey, onTranscript, onError, onSpeechEnd]);
 
   return { liveClientRef, initDeepgram };
 };
@@ -132,14 +111,15 @@ const useMediaRecorder = (
   return { startRecording, stopRecording, mediaRecorder: mediaRecorderRef.current };
 };
 
-const useDeepgramSTT = (deviceId?: string) => {
+const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const [lastSpeechEnd, setLastSpeechEnd] = useState<number | null>(null);
+  const [hasStopped, setHasStopped] = useState(false);
 
-  const { apiKey } = useApiKey();
   const { liveClientRef, initDeepgram } = useDeepgramLiveClient(
     apiKey,
     (part) => {
@@ -148,9 +128,14 @@ const useDeepgramSTT = (deviceId?: string) => {
         setTranscript(prev => prev + part);
       } else {
         setInterimTranscript(part);
+        setHasStopped(false);
       }
     },
-    setError
+    setError,
+    (lastWordEnd) => {
+      setLastSpeechEnd(lastWordEnd);
+      setHasStopped(true);
+    }
   );
 
   const { startRecording, stopRecording, mediaRecorder } = useMediaRecorder(
@@ -174,6 +159,7 @@ const useDeepgramSTT = (deviceId?: string) => {
       setError(null);
       setTranscript('');
       setIsListening(true);
+      setHasStopped(false);
   
       await initDeepgram(); // Wait for Deepgram connection
       
@@ -216,6 +202,8 @@ const useDeepgramSTT = (deviceId?: string) => {
     stopListening,
     mediaRecorder,
     audioStream: streamRef.current,
+    lastSpeechEnd,
+    hasStopped,
   };
 };
 
