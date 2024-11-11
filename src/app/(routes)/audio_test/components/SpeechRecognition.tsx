@@ -8,10 +8,12 @@ import AudioSelector from './AudioSelector';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import AudioVisualizer from '@/components/shared/Audiovisualizer';
+import useApiKey from '@/hooks/useDeepgramTempAPIKey';
 
 
 const SpeechRecognition: React.FC = () => {
-    const { transcript, isListening, error, audioStream, startListening, stopListening } = useDeepgramSTT();
+    const { apiKey } = useApiKey()
+    const { transcript, isListening, error, audioStream, startListening, stopListening } = useDeepgramSTT(apiKey);
     const [deviceId, setDeviceId] = useState<string | null>(null)
     const devices = useMediaDevices(deviceId, setDeviceId, "audioinput")
 

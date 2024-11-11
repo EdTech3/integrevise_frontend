@@ -151,7 +151,7 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
     }
 
     if (!apiKey) {
-      infoToast('Getting Session Details...');
+      infoToast('Creating a secure session...');
       return;
     }
   
