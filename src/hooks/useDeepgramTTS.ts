@@ -1,14 +1,7 @@
 import { useState } from 'react';
 
-interface UseDeepgramTTSResult {
-  convertToSpeech: (text: string) => Promise<void>;
-  isLoading: boolean;
-  isSpeaking: boolean;
-  error: string | null; 
-}
-
-export function useDeepgramTTS(onComplete?: () => void): UseDeepgramTTSResult {
-  const [isLoading, setIsLoading] = useState(true);
+export function useDeepgramTTS(onComplete?: () => void) {
+  const [isLoading, setIsLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,16 +26,26 @@ export function useDeepgramTTS(onComplete?: () => void): UseDeepgramTTSResult {
       const url = window.URL.createObjectURL(blob);
       const audio = new Audio(url);
       
-      setIsSpeaking(true);
-      audio.play();
+      audio.addEventListener('play', () => {
+        setIsSpeaking(true);
+      });
       
       audio.addEventListener('ended', () => {
-        window.URL.revokeObjectURL(url);
         setIsSpeaking(false);
+        window.URL.revokeObjectURL(url);
         onComplete?.();
       });
+      
+      await new Promise((resolve) => {
+        audio.addEventListener('loadedmetadata', resolve);
+      });
+      
+      const streamDelay = (audio.duration * 1000) / text.length;
+      
+      return { audio, streamDelay };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      return null;
     } finally {
       setIsLoading(false);
     }
