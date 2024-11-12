@@ -206,3 +206,43 @@ body {
   50% { transform: scaleY(0.1); }
   100% { transform: scaleY(1); }
 }
+
+/* Add these new animations and styles at the bottom */
+@keyframes glowPulse {
+  0% { filter: drop-shadow(0 0 2px rgba(120, 220, 255, 0.3)); }
+  50% { filter: drop-shadow(0 0 5px rgba(120, 220, 255, 0.5)); }
+  100% { filter: drop-shadow(0 0 2px rgba(120, 220, 255, 0.3)); }
+}
+
+@keyframes antennaThink {
+  0% { transform: scaleY(1) translateY(0); }
+  50% { transform: scaleY(1.1) translateY(-1px); }
+  100% { transform: scaleY(1) translateY(0); }
+}
+
+.circuit-trace {
+  stroke-dasharray: 150;
+  stroke-dashoffset: 150;
+  animation: drawCircuit 2s ease forwards;
+}
+
+@keyframes drawCircuit {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.antenna {
+  transform-origin: bottom;
+  animation: antennaIdle 3s ease-in-out infinite;
+}
+
+@keyframes antennaIdle {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.hexagon-bg {
+  opacity: 0.1;
+  animation: glowPulse 2s ease-in-out infinite;
+}

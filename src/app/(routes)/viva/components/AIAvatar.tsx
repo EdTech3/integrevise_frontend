@@ -84,8 +84,57 @@ const AIAvatar = ({ expression = 'neutral', size = 100 }: AIAvatarProps) => {
                 transition: 'transform 0.3s ease-out'
             }}
         >
-            {/* Face circle */}
-            <circle cx="50" cy="50" r="45" fill="#eef5f7" />
+            {/* Background hexagonal grid */}
+            <pattern id="hexGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path
+                    d="M5,0 L10,2.5 L10,7.5 L5,10 L0,7.5 L0,2.5 Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="0.5"
+                    className="hexagon-bg"
+                />
+            </pattern>
+            <rect width="100" height="100" fill="url(#hexGrid)" opacity="0.1" />
+
+            {/* Main hexagonal face */}
+            <path
+                d="M50,10 L80,25 L80,75 L50,90 L20,75 L20,25 Z"
+                fill="#eef5f7"
+                className="face-hex"
+            />
+
+            {/* Circuit traces */}
+            <path
+                d="M20,25 L35,25 M80,75 L65,75 M50,90 L50,80"
+                stroke="#86c5d8"
+                strokeWidth="1"
+                fill="none"
+                className="circuit-trace"
+            />
+
+            {/* Antennae */}
+            <g className="antenna">
+                <line
+                    x1="35"
+                    y1="15"
+                    x2="35"
+                    y2="5"
+                    stroke="#333"
+                    strokeWidth="2"
+                    className={expression === 'thinking' ? 'thinking-antenna' : ''}
+                />
+                <line
+                    x1="65"
+                    y1="15"
+                    x2="65"
+                    y2="5"
+                    stroke="#333"
+                    strokeWidth="2"
+                    className={expression === 'thinking' ? 'thinking-antenna' : ''}
+                />
+                <circle cx="35" cy="5" r="1.5" fill="#333" />
+                <circle cx="65" cy="5" r="1.5" fill="#333" />
+            </g>
 
             {/* Eyebrows - Dynamic based on state */}
             <g className="eyebrows" style={{ transition: 'transform 0.3s ease' }}>
