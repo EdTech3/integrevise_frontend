@@ -165,3 +165,44 @@ body {
     pointer-events: none; 
   }
 }
+
+.ai-avatar {
+  transition: all 0.3s ease;
+}
+
+.ai-avatar:hover {
+  transform: scale(1.05);
+}
+
+/* Replace the existing speak animation with this new one */
+@keyframes speak {
+    0% { 
+        d: path('M30 65 Q50 68 70 65 L70 67 Q50 70 30 67 Z'); 
+    }
+    50% { 
+        d: path('M30 65 Q50 71 70 65 L70 70 Q50 76 30 70 Z'); 
+    }
+    100% { 
+        d: path('M30 65 Q50 68 70 65 L70 67 Q50 70 30 67 Z'); 
+    }
+}
+
+.speaking-mouth {
+    animation: speak 0.4s infinite ease-in-out;
+}
+
+@keyframes think {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+
+.thinking-bubble {
+  animation: think 1.5s infinite;
+}
+
+@keyframes blink {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(0.1); }
+  100% { transform: scaleY(1); }
+}

@@ -2,6 +2,7 @@ import CountdownTimer from '../../audio_test/components/CountdownTimer'
 import AIAvatar from './AIAvatar'
 import { useEffect, useState } from 'react';
 import { errorToast } from '@/lib/toast';
+import { AIAvatarExpression } from '../type';
 
 interface AISectionProps {
     convertToSpeech: (text: string) => Promise<{ audio: HTMLAudioElement, streamDelay: number } | null>;
@@ -12,7 +13,18 @@ interface AISectionProps {
 
 const AISection = ({ convertToSpeech, error, isLoading, isSpeaking }: AISectionProps) => {
     const [displayedText, setDisplayedText] = useState('');
+    const [expression, setExpression] = useState<AIAvatarExpression>('neutral');
     const fullText = `In your document, you mentioned the role of text-to-image diffusion in generating high-quality images from natural language descriptions. Could you elaborate on how this process works and how it contributes to the overall image quality? I'd love to hear your thoughts on the key factors that make it effective.`;
+
+    useEffect(() => {
+        if (isSpeaking) {
+            setExpression('speaking');
+        } else if (isLoading) {
+            setExpression('thinking');
+        } else {
+            setExpression('engaged');
+        }
+    }, [isSpeaking, isLoading]);
 
     const handleSpeak = async () => {
         if (isSpeaking) return;
@@ -47,7 +59,7 @@ const AISection = ({ convertToSpeech, error, isLoading, isSpeaking }: AISectionP
         <section className='space-y-20 px-4 h-1/2'>
             <div className='flex justify-between items-center'>
                 <figure onClick={handleSpeak}>
-                    <AIAvatar />
+                    <AIAvatar expression={expression} />
                 </figure>
                 <CountdownTimer time={120} />
             </div>

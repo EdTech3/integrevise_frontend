@@ -37,8 +37,6 @@ const StudentSection = ({ transcript, isListening, startListening, stopListening
     return (
         <TooltipProvider>
             <section className="w-full bg-secondary-100 text-foreground space-y-2 p-4 h-1/2 rounded-tr-3xl rounded-tl-3xl flex flex-col">
-
-
                 <div className='flex-grow h-[300px] overflow-scroll'>
                     {transcript &&
                         <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight  w-full">
@@ -95,7 +93,7 @@ const StudentSection = ({ transcript, isListening, startListening, stopListening
 
                     </div>
 
-                    <StudentAvatar />
+                    <StudentAvatar useCamera={false} />
                 </div>
             </section>
         </TooltipProvider>
