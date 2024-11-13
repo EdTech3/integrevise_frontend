@@ -12,3 +12,4 @@ This are little features that would be implemented after every major feature has
 
 ## Viva
 [] Implement a countdown for the test
+[] Use react query and JSON server to mock the question process
