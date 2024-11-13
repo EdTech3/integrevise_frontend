@@ -1,0 +1,221 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "multiSchema"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
+  schemas    = ["public", "auth"]
+}
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+
+  @@schema("auth")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  auth_id     String   @unique
+  email       String   @unique
+  fullName    String
+  studentId   String   @unique
+  department  String
+  role        UserRole @default(STUDENT)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  vivaSessions VivaSession[]
+
+  @@schema("auth")
+}
+
+model Subject {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  vivaSessions     VivaSession[]
+  subjectCriteria  SubjectCriteria[]
+
+  @@schema("public")
+}
+
+model Criteria {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  defaultWeight Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  subjectCriteria        SubjectCriteria[]
+  questionAnswerCriteria QuestionAnswerCriteria[]
+
+  @@schema("public")
+}
+
+model SubjectCriteria {
+  id        String   @id @default(cuid())
+  weight    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  criteriaId String
+  criteria   Criteria @relation(fields: [criteriaId], references: [id])
+
+  @@index([subjectId])
+  @@index([criteriaId])
+  @@schema("public")
+}
+
+enum VivaSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+
+  @@schema("public")
+}
+
+model VivaSession {
+  id                      String            @id @default(cuid())
+  startTime               DateTime
+  endTime                DateTime?
+  overallScore           Float?
+  status                 VivaSessionStatus  @default(SCHEDULED)
+  facialRecognitionStatus Boolean           @default(false)
+  cameraId               String?
+  audioId                String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  // Relations
+  userId                 String
+  user                   User               @relation(fields: [userId], references: [id])
+  subjectId              String
+  subject                Subject            @relation(fields: [subjectId], references: [id])
+  questionAnswers        QuestionAnswer[]
+  documents             Document[]          // New relation
+
+  @@index([userId])
+  @@index([subjectId])
+  @@schema("public")
+}
+
+model QuestionAnswer {
+  id                String   @id @default(cuid())
+  question          String
+  answer            String
+  score             Float?
+  friendlyQuestion  String
+  overallEvaluation String?
+  timestamp         DateTime @default(now())
+  questionEmbedding Unsupported("vector")?
+  answerEmbedding   Unsupported("vector")?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  vivaSessionId          String
+  vivaSession           VivaSession             @relation(fields: [vivaSessionId], references: [id])
+  questionAnswerCriteria QuestionAnswerCriteria[]
+
+  @@index([vivaSessionId])
+  @@schema("public")
+}
+
+model QuestionAnswerCriteria {
+  id          String   @id @default(cuid())
+  evaluation  String
+  score       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  questionAnswerId String
+  questionAnswer   QuestionAnswer @relation(fields: [questionAnswerId], references: [id])
+  criteriaId       String
+  criteria         Criteria      @relation(fields: [criteriaId], references: [id])
+
+  @@index([questionAnswerId])
+  @@index([criteriaId])
+  @@schema("public")
+}
+
+enum DocumentType {
+  PDF
+  TEXT
+  WORD
+  POWERPOINT
+  URL
+
+  @@schema("public")
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@schema("public")
+}
+
+model Document {
+  id          String           @id @default(cuid())
+  title       String
+  type        DocumentType
+  filePath    String?         // For uploaded files
+  url         String?         // For web URLs
+  status      ProcessingStatus @default(PENDING)
+  metadata    Json?           // Store file metadata (size, pages, etc.)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  vivaSessionId String
+  vivaSession   VivaSession    @relation(fields: [vivaSessionId], references: [id])
+  chunks        DocumentChunk[]
+
+  @@index([vivaSessionId])
+  @@schema("public")
+}
+
+model DocumentChunk {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  embedding   Unsupported("vector")?
+  pageNumber  Int?
+  tokenCount  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id])
+
+  @@index([documentId])
+  @@schema("public")
+}
