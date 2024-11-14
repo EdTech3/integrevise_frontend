@@ -3,10 +3,10 @@ import { prisma } from '../../../lib/prisma';
 import { getSimilarChunks } from '@/lib/services/openAIService';
 import { openai } from '@/lib/services/openAIService';
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const vivaSessionId = searchParams.get('vivaSessionId');
+    const body = await request.json();
+    const { vivaSessionId } = body;
     
     if (!vivaSessionId) {
       return NextResponse.json({ error: 'Viva session ID is required' }, { status: 400 });
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       where: { id: vivaSessionId },
       include: {
         documents: true,
-        subject: true
+        subject: true,
       }
     });
 
@@ -31,8 +31,6 @@ export async function GET(request: Request) {
       vivaSessionId,
       10,
     );
-
-    console.log("First chunk:", relevantChunks[0].content);
 
     // Format chunks by category for better context
     const formattedContext = relevantChunks
@@ -49,12 +47,23 @@ export async function GET(request: Request) {
       })
       .join('\n\n');
 
-      console.log("Formatted Context", formattedContext)
+    const studentName = "Kelvin";
 
     const completion = await openai.chat.completions.create({
       messages: [{
         role: "system",
         content: `You are an expert academic examiner conducting a viva voice examination for the subject: ${vivaSession.subject.name}.
+        
+        Conversation Style:
+        Maintain two modes of communication:
+        - Primary Mode: Professional and academic, used for the formal question structure
+        - Friendly Mode: Supportive and encouraging, used for introducing questions and follow-ups
+        
+        When speaking directly to ${studentName}:
+        - Start with friendly encouragement like "That's an interesting point..." or "I'd love to hear your thoughts on..."
+        - Use their name occasionally to personalize the interaction
+        - Keep a supportive tone while maintaining academic rigor
+        - Help them feel comfortable expanding on their ideas
         
         You have access to different types of documents, clearly marked with their source category. Use this context to generate questions that:
         1. Test deep understanding rather than surface-level knowledge
@@ -74,13 +83,17 @@ export async function GET(request: Request) {
         Generate 5 questions and return them as a JSON object with the following structure:
         {
           "questions": [{
-            "main": "The primary question text",
-            "followUp": ["Related follow-up questions"],
-            "context": "Reference to specific part of student's work",
-            "criteria": "Related assessment criteria"
+            "main": "The formal academic version of the question",
+            "friendlyVersion": "The same question rephrased in a more conversational, encouraging tone occasionally using the student's name",
+            "followUp": ["List of formal follow-up questions to probe deeper understanding"],
+            "friendlyFollowUp": ["The follow-up questions rephrased in a more conversational tone"],
+            "context": "Specific reference to relevant parts of the provided documents",
+            "criteria": "The assessment criteria this question addresses",
+            "encouragement": "A supportive phrase to use if the student needs reassurance"
           }]
         }
-        `
+        
+        Ensure each response maintains academic rigor while creating a supportive environment for ${studentName}.`
       }],
       model: "gpt-4-turbo-preview",
       temperature: 0.7,
