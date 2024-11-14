@@ -12,4 +12,10 @@ This are little features that would be implemented after every major feature has
 
 ## Viva
 [] Implement a countdown for the test
-[] Use react query and JSON server to mock the question process
+[x] Use react query and JSON server to mock the question process
+
+
+## Tasks for Today
+[] Setup a Context Tab That allows user to upload document
+[] Create the Modal that Prepares Student for the The Actual Viva
+[] Get the List of questions and start the Q & A Process
