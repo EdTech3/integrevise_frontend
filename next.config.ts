@@ -7,7 +7,9 @@ const nextConfig: NextConfig = {
         hostname: 'avatar.iran.liara.run',
       }
     ]
-  }
+  },
+  serverComponentsExternalPackages: ['pdf2json'],
+
 };
 
 export default nextConfig;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require('@prisma/client')
 
@@ -143,11 +144,14 @@ async function main() {
       ]
     })
 
-    // Create a test Document
-    const testDocument = await prisma.document.create({
+    // Create test Documents with corrected categories
+    const assessmentBrief = await prisma.document.create({
       data: {
-        title: 'Advanced Mobile Computing',
+        title: 'Advanced Mobile Computing Assignment',
         type: 'WORD',
+        category: 'ASSESSMENT_BRIEF',
+        priority: 2,
+        isRequired: true,
         filePath: 'IS3S664_2324_CW1M.docx',
         url: 'https://rnfuxprqrbfupmebbjwk.supabase.co/storage/v1/object/public/documents/IS3S664_2324_CW1M.docx',
         status: 'COMPLETED',
@@ -155,6 +159,25 @@ async function main() {
           pageCount: 10,
           wordCount: 2500,
           fileSize: '1.2MB'
+        },
+        vivaSessionId: vivaSession.id
+      }
+    });
+
+    const studentSubmission = await prisma.document.create({
+      data: {
+        title: 'Mobile Computing Assignment Brief',
+        type: 'PDF',
+        category: 'STUDENT_WORK',
+        priority: 3,
+        isRequired: true,
+        filePath: 'IS3S664_brief.pdf',
+        url: 'https://rnfuxprqrbfupmebbjwk.supabase.co/storage/v1/object/public/documents/IS3S664_brief.pdf',
+        status: 'COMPLETED',
+        metadata: {
+          pageCount: 3,
+          wordCount: 800,
+          fileSize: '500KB'
         },
         vivaSessionId: vivaSession.id
       }

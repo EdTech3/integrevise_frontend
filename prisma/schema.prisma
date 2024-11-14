@@ -183,14 +183,27 @@ enum ProcessingStatus {
   @@schema("public")
 }
 
+enum DocumentCategory {
+  STUDENT_WORK      // Primary submission
+  ASSESSMENT_BRIEF  // Assignment requirements and criteria
+  COURSE_MATERIAL   // Supporting course documents
+  TEACHER_NOTES     // Additional context from instructors
+  OTHER            // Miscellaneous documents
+
+  @@schema("public")
+}
+
 model Document {
   id          String           @id @default(cuid())
   title       String
   type        DocumentType
-  filePath    String?         // For uploaded files
-  url         String?         // For web URLs
+  category    DocumentCategory // New field
+  priority    Int             // New field: Higher number = higher priority
+  isRequired  Boolean         // New field: Indicates if document is mandatory for viva
+  filePath    String?         
+  url         String?         
   status      ProcessingStatus @default(PENDING)
-  metadata    Json?           // Store file metadata (size, pages, etc.)
+  metadata    Json?           
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
@@ -200,6 +213,7 @@ model Document {
   chunks        DocumentChunk[]
 
   @@index([vivaSessionId])
+  @@index([category])  // New index
   @@schema("public")
 }
 
@@ -209,6 +223,7 @@ model DocumentChunk {
   embedding   Unsupported("vector(1536)")?
   pageNumber  Int?
   tokenCount  Int
+  importance  Float?   // AI-determined importance score
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -217,5 +232,6 @@ model DocumentChunk {
   document    Document @relation(fields: [documentId], references: [id])
 
   @@index([documentId])
+  @@index([importance])
   @@schema("public")
 }

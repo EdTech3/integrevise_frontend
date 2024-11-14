@@ -5,16 +5,14 @@ import { getEmbedding } from './openAIService'
 import { encode } from 'gpt-tokenizer/model/gpt-3.5-turbo'
 import { Document, DocumentType } from '@prisma/client'
 import mammoth from 'mammoth'
-
+import PDFParser from 'pdf2json'
 
 async function parseBlob(blob: Blob, type: DocumentType): Promise<string> {
-    console.log("Parsing blob:", blob); 
+  console.log("Parsing blob:", blob); 
   try {
     switch (type) {
       case 'WORD':
-        // Convert blob to ArrayBuffer
         const arrayBuffer = await blob.arrayBuffer();
-        // Use mammoth to extract text from Word document
         const result = await mammoth.extractRawText({
           buffer: Buffer.from(arrayBuffer)
         });
@@ -24,8 +22,22 @@ async function parseBlob(blob: Blob, type: DocumentType): Promise<string> {
         return await blob.text();
 
       case 'PDF':
-        // TODO: Implement PDF parsing
-        return "";
+        // Convert blob to ArrayBuffer
+        const pdfArrayBuffer = await blob.arrayBuffer();
+        // Convert ArrayBuffer to Buffer
+        const pdfBuffer = Buffer.from(pdfArrayBuffer);
+
+        // Use pdf2json to extract text from PDF
+        return new Promise((resolve, reject) => {
+          const pdfParser = new (PDFParser as any)(null, 1);
+          pdfParser.on('pdfParser_dataError', (errData: any) => reject(errData.parserError));
+          pdfParser.on('pdfParser_dataReady', () => {
+            const parsedText = (pdfParser as any).getRawTextContent();
+            resolve(parsedText);
+          });
+
+          pdfParser.parseBuffer(pdfBuffer);
+        });
 
       case 'POWERPOINT':
         throw new Error('PowerPoint parsing not implemented yet');
@@ -44,15 +56,15 @@ async function parseBlob(blob: Blob, type: DocumentType): Promise<string> {
 
 async function getDocumentContent(document: Document): Promise<string> {
   try {
-    if (!document.url) {
-      throw new Error('Document URL not found');
+    if (!document.filePath) {
+      throw new Error('Document file path is not found');
     }
 
 
     const { data, error } = await supabase
       .storage
       .from('documents')
-      .download("IS3S664_2324_CW1M.docx");
+      .download(document.filePath);
 
     if (error) {
       console.error('Supabase storage error:', {
@@ -113,6 +125,7 @@ export async function processDocument(documentId: string) {
           id: crypto.randomUUID(),
           documentId: document.id,
           content: chunkContent,
+          importance: 0.5,
           embedding: embedding,
           tokenCount: encode(chunkContent).length,
           updatedAt: new Date().toISOString()
