@@ -105,8 +105,6 @@ export async function processDocument(documentId: string) {
     for (const chunkContent of chunks) {
       // Get embedding
       const embedding = await getEmbedding(chunkContent);
-
-      console.log("Embedding:", embedding);
       
       // Save chunk with embedding using Supabase
       const { error } = await supabase

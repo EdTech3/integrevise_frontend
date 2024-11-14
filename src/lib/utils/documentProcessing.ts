@@ -2,6 +2,8 @@ import {
     encode,
     decode,
   } from 'gpt-tokenizer/model/gpt-3.5-turbo'
+
+  // TODO: Make this function more efficient by splitting logically
   
 
 export const splitIntoChunks = (text: string, maxTokens: number = 500): string[] => {
