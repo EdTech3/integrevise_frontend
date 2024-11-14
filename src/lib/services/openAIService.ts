@@ -1,3 +1,4 @@
+import { DocumentCategory } from '@prisma/client';
 import OpenAI from 'openai';
 
 export const openai = new OpenAI({
@@ -14,13 +15,28 @@ export async function getEmbedding(text: string): Promise<number[]> {
   return response.data[0].embedding;
 }
 
-export async function getSimilarChunks(query: string, vivaSessionId: string, limit: number = 5) {
-  // Get embedding for query
-  const queryEmbedding = await getEmbedding(query);
+type WeightedChunk = {
+  content: string;
+  importance: number | null;
+  documentCategory: DocumentCategory;
+  similarity: number;
+};
 
-  // Find similar chunks using vector similarity
-  const similarChunks = await prisma.$queryRaw`
-    SELECT c.content, c.id,
+export async function getSimilarChunks(
+  query: string, 
+  vivaSessionId: string, 
+  limit: number = 5
+) {
+  const queryEmbedding = await getEmbedding(
+    query || "What are the key points and important concepts discussed?"
+  );
+
+  // Simplified query focusing on essential fields
+  const chunks: WeightedChunk[] = await prisma.$queryRaw`
+    SELECT 
+      c.content,
+      c.importance,
+      d.category as "documentCategory",
       (c.embedding <=> ${queryEmbedding}::vector) as similarity
     FROM "DocumentChunk" c
     JOIN "Document" d ON d.id = c."documentId"
@@ -29,5 +45,5 @@ export async function getSimilarChunks(query: string, vivaSessionId: string, lim
     LIMIT ${limit}
   `;
 
-  return similarChunks;
+  return chunks;
 } 
