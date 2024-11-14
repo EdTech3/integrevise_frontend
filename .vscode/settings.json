@@ -4,5 +4,6 @@
         "Deepgram",
         "faceapi",
         "Wavesurfer"
-    ]
+    ],
+    "typescript.tsdk": "node_modules/typescript/lib"
 }

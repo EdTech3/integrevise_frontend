@@ -21,8 +21,12 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "face-api.js": "^0.22.2",
+    "gpt-tokenizer": "^2.6.2",
     "lucide-react": "^0.454.0",
+    "mammoth": "^1.8.0",
     "next": "^15.0.2",
+    "openai": "^4.72.0",
+    "pdf-parse": "^1.1.1",
     "prisma": "^5.22.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -36,6 +40,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.17.6",
+    "@types/pdf-parse": "^1.1.4",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
@@ -46,6 +51,6 @@
     "typescript": "^5"
   },
   "prisma": {
-   "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts"
   }
 }
