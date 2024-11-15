@@ -1,4 +1,3 @@
-import React, { useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -10,11 +9,20 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Formik, Form, Field } from 'formik'
-import * as Yup from 'yup'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useUploadDocument } from '@/hooks/api/useDocuments'
 import { DocumentCategory } from '@prisma/client'
-import { useDropzone } from 'react-dropzone'
+import { Field, Form, Formik } from 'formik'
+import React, { useCallback } from 'react'
+import * as Yup from 'yup'
+import FileUpload from './FileUpload'
+
+interface DocumentFormValues {
+    title: string;
+    description: string;
+    category: string;
+    file: File | null;
+}
 
 interface Props {
     children: React.ReactNode
@@ -27,10 +35,13 @@ const validationSchema = Yup.object().shape({
     file: Yup.mixed().required('File is required')
 })
 
+
 const NewDocumentForm = ({ children }: Props) => {
     const onDrop = useCallback((acceptedFiles: File[], setFieldValue: (field: string, value: any) => void) => {
         setFieldValue('file', acceptedFiles[0])
     }, [])
+
+    const { mutate: uploadDocument } = useUploadDocument();
 
 
     return (
@@ -45,7 +56,7 @@ const NewDocumentForm = ({ children }: Props) => {
                         Add a new document to your viva context
                     </DialogDescription>
                 </DialogHeader>
-                <Formik
+                <Formik<DocumentFormValues>
                     initialValues={{
                         title: '',
                         description: '',
@@ -54,8 +65,10 @@ const NewDocumentForm = ({ children }: Props) => {
                     }}
                     validationSchema={validationSchema}
                     onSubmit={(values) => {
-                        console.log(values)
-                        // Handle form submission
+                        uploadDocument({
+                            ...values,
+                            vivaSessionId: "cm3gt1ps0000dkdmjtzf7hvqe"
+                        })
                     }}
                 >
                     {({ errors, touched, setFieldValue }) => (
@@ -120,35 +133,4 @@ const NewDocumentForm = ({ children }: Props) => {
         </Dialog>
     )
 }
-
-const FileUpload = ({ setFieldValue, onDrop }: {
-    setFieldValue: (field: string, value: any) => void,
-    onDrop: (acceptedFiles: File[], setFieldValue: (field: string, value: any) => void) => void
-}) => {
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop: (acceptedFiles) => onDrop(acceptedFiles, setFieldValue),
-        multiple: false
-    })
-
-    return (
-        <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-6 cursor-pointer text-center transition-colors
-                ${isDragActive ? 'border-primary bg-primary/5' : 'border-input'}
-            `}
-        >
-            <input {...getInputProps()} />
-            {isDragActive ? (
-                <p className="text-sm text-muted-foreground">Drop the file here...</p>
-            ) : (
-                <p className="text-sm text-muted-foreground">
-                    Drag & drop a file here, or click to select a file
-                </p>
-            )}
-        </div>
-    )
-}
-
 export default NewDocumentForm
-
-

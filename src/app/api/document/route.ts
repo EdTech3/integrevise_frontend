@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
 import { processDocument } from '../../../lib/services/documentProcessor';
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
     // Get documentId from URL parameters
-    const { searchParams } = new URL(request.url);
-    const documentId = searchParams.get('documentId');
+    const { documentId } = await request.json();
 
     if (!documentId) {
       return NextResponse.json({ error: 'Document ID is required' }, { status: 400 });
@@ -22,3 +21,5 @@ export async function GET(request: Request) {
     );
   }
 }
+
+
