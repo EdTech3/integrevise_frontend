@@ -20,7 +20,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
                 refetchOnWindowFocus: false,
             },
             mutations: {
-                retry: 2,
+                retry: 0,
                 onError: (error) => {
                     if (error instanceof Error) {
                         errorToast(error.message);

@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
-import { DocumentType } from '@prisma/client';
+import { DocumentCategory, DocumentType } from '@prisma/client';
+import { checkSupportedType, resolveBlobMimeType } from '@/lib/utils/documentFormatParsing';
 
 export async function POST(request: Request) {
   try {
-    const {
-      file,
-      title,
-      description,
-      category,
-      vivaSessionId
-    } = await request.json();
-    
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const title = formData.get('title') as string;
+    // const description = formData.get('description') as string;
+    const category = formData.get('category') as string;
+    const vivaSessionId = formData.get('vivaSessionId') as string;
+
     if (!file || !title || !category) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -20,11 +20,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Determine document type from file extension
-    const fileExtension = file.name.split('.').pop()?.toLowerCase();
-    const documentType = getDocumentType(fileExtension);
 
-    if (!documentType) {
+    const documentType = resolveBlobMimeType(file)
+    const isSupportedType = checkSupportedType(documentType)
+    
+    if (!isSupportedType) {
       return NextResponse.json(
         { error: 'Unsupported file type' },
         { status: 400 }
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     // Upload file to Supabase storage
     const uniqueFileName = `${crypto.randomUUID()}-${file.name}`;
-    const { data: uploadData, error: uploadError } = await supabase
+    const { error: uploadError } = await supabase
       .storage
       .from('documents')
       .upload(uniqueFileName, file, {
@@ -52,9 +52,8 @@ export async function POST(request: Request) {
     const document = await prisma.document.create({
       data: {
         title,
-        description,
-        category,
-        type: documentType,
+        category: category as DocumentCategory,
+        type: documentType as DocumentType,
         filePath: uniqueFileName,
         priority: 1,
         isRequired: false,
@@ -81,22 +80,5 @@ export async function POST(request: Request) {
       { error: 'Failed to process document upload' },
       { status: 500 }
     );
-  }
-}
-
-function getDocumentType(extension?: string): DocumentType | null {
-  switch (extension) {
-    case 'pdf':
-      return 'PDF';
-    case 'doc':
-    case 'docx':
-      return 'WORD';
-    case 'txt':
-      return 'TEXT';
-    case 'ppt':
-    case 'pptx':
-      return 'POWERPOINT';
-    default:
-      return null;
   }
 }

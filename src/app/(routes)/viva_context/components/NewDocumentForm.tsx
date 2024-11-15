@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useUploadDocument } from '@/hooks/api/useDocuments'
 import { DocumentCategory } from '@prisma/client'
 import { Field, Form, Formik } from 'formik'
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import * as Yup from 'yup'
 import FileUpload from './FileUpload'
 
@@ -37,15 +37,21 @@ const validationSchema = Yup.object().shape({
 
 
 const NewDocumentForm = ({ children }: Props) => {
+    const [open, setOpen] = useState(false)
     const onDrop = useCallback((acceptedFiles: File[], setFieldValue: (field: string, value: any) => void) => {
         setFieldValue('file', acceptedFiles[0])
     }, [])
 
-    const { mutate: uploadDocument } = useUploadDocument();
+    const { mutate: uploadDocument, isSuccess, isPending } = useUploadDocument();
 
+    useEffect(() => {
+        if (isSuccess) {
+            setOpen(false)
+        }
+    }, [isSuccess])
 
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
@@ -64,11 +70,14 @@ const NewDocumentForm = ({ children }: Props) => {
                         file: null
                     }}
                     validationSchema={validationSchema}
-                    onSubmit={(values) => {
-                        uploadDocument({
+                    onSubmit={(values, { resetForm }) => {
+                        const data = {
                             ...values,
                             vivaSessionId: "cm3gt1ps0000dkdmjtzf7hvqe"
-                        })
+                        }
+
+                        uploadDocument(data)
+                        resetForm()
                     }}
                 >
                     {({ errors, touched, setFieldValue }) => (
@@ -124,7 +133,39 @@ const NewDocumentForm = ({ children }: Props) => {
                             </div>
 
                             <DialogFooter>
-                                <Button className='w-full' type="submit">Upload Document</Button>
+                                <Button
+                                    className='w-full'
+                                    type="submit"
+                                    disabled={isPending}
+                                >
+                                    {isPending ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                />
+                                            </svg>
+                                            Uploading...
+                                        </>
+                                    ) : (
+                                        'Upload Document'
+                                    )}
+                                </Button>
                             </DialogFooter>
                         </Form>
                     )}

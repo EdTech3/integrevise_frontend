@@ -3,6 +3,7 @@ import { documentsApi } from '@/lib/services/api';
 import { queryKeys } from '@/lib/config/queryKeys';
 import { Document } from '@/types/api';
 import { toast } from 'react-toastify';
+import { errorToast, successToast } from '@/lib/toast';
 
 export function useDocuments(vivaSessionId: string) {
   return useQuery({
@@ -58,10 +59,10 @@ export function useUploadDocument() {
   return useMutation({
     mutationFn: documentsApi.upload,
     onError: () => {
-      toast.error('Failed to upload document');
+      errorToast('Failed to upload document');
     },
     onSuccess: () => {
-      toast.success('Document uploaded successfully');
+      successToast('Document uploaded successfully');
       // Refetch the documents list
       queryClient.invalidateQueries({ queryKey: queryKeys.documents.all });
     },

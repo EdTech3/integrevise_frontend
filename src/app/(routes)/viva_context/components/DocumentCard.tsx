@@ -56,7 +56,7 @@ const DocumentCard = ({ title, description, category, updatedAt, onEdit, onDelet
                     </DropdownMenuContent>
                 </DropdownMenu>
             </CardHeader>
-            <CardContent className='h-24 overflow-hidden flex flex-col justify-center'>
+            <CardContent className='h-24 overflow-hidden flex-grow flex flex-col justify-start'>
                 <p className="text-sm text-muted-foreground">{description}</p>
             </CardContent>
             <CardFooter>

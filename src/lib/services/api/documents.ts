@@ -7,7 +7,7 @@ type UploadDocument = {
   title: string;
   description: string;
   category: string;
-  file: File | nul;
+  file: File | null;
   vivaSessionId: string;
 }
 
@@ -21,7 +21,22 @@ export const documentsApi = {
   },
 
   upload: async (data: UploadDocument): Promise<void> => {
-    await axiosInstance.post(API_ROUTES.documents.upload, data);
+    const formData = new FormData();
+    formData.append('title', data.title);
+    formData.append('description', data.description);
+    formData.append('category', data.category);
+    formData.append('vivaSessionId', data.vivaSessionId);
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+
+    await axiosInstance.post(API_ROUTES.documents.upload, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
   },
 
   process: async (documentId: string): Promise<void> => {

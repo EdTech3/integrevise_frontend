@@ -1,4 +1,4 @@
-import { resolveBlobMimeType } from "@/lib/utils/resolveMimeType"
+import { resolveBlobMimeType } from "@/lib/utils/documentFormatParsing"
 import { useDropzone } from "react-dropzone"
 import { BsFileEarmarkPdfFill } from "react-icons/bs"
 import { SiMicrosoftword } from "react-icons/si"
@@ -13,9 +13,8 @@ const FileUpload = ({ setFieldValue, onDrop }: {
     })
 
     const IconMap: Record<string, JSX.Element> = {
-        pdf: <BsFileEarmarkPdfFill />,
-        doc: <SiMicrosoftword />,
-        docx: <SiMicrosoftword />
+        "PDF": <BsFileEarmarkPdfFill />,
+        "WORD": <SiMicrosoftword />,
     }
 
     return (
