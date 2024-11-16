@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useUploadDocument } from '@/hooks/api/useDocuments'
+import { useUploadDocument, useUpdateDocument } from '@/hooks/api/useDocuments'
 import { DocumentCategory } from '@prisma/client'
 import { Field, Form, Formik } from 'formik'
 import React, { useCallback, useEffect, useState } from 'react'
 import * as Yup from 'yup'
 import FileUpload from './FileUpload'
+
+// TODO: cleanup the types definition 
 
 interface DocumentFormValues {
     title: string;
@@ -24,8 +26,24 @@ interface DocumentFormValues {
     file: File | null;
 }
 
+export type EditDocument = {
+    id: string;
+    title: string;
+    description: string;
+    category: DocumentCategory;
+    fileName: string;
+    filePath: string;
+    file: {
+        networkStatus: "idle" | "loading" | "success" | "error";
+        content: File | null
+    }
+}
+
 interface Props {
-    children: React.ReactNode
+    children: React.ReactNode;
+    mode?: 'create' | 'edit';
+    existingDocument?: EditDocument;
+    onClose?: () => void;
 }
 
 const validationSchema = Yup.object().shape({
@@ -36,51 +54,75 @@ const validationSchema = Yup.object().shape({
 })
 
 
-const NewDocumentForm = ({ children }: Props) => {
+const NewDocumentForm = ({ children, mode, existingDocument, onClose }: Props) => {
     const [open, setOpen] = useState(false)
     const onDrop = useCallback((acceptedFiles: File[], setFieldValue: (field: string, value: any) => void) => {
         setFieldValue('file', acceptedFiles[0])
     }, [])
 
     const { mutate: uploadDocument, isSuccess, isPending } = useUploadDocument();
+    const { mutate: updateDocument, isSuccess: isUpdateSuccess, isPending: isUpdatePending } = useUpdateDocument();
 
     useEffect(() => {
-        if (isSuccess) {
+        if (isSuccess || isUpdateSuccess) {
             setOpen(false)
         }
-    }, [isSuccess])
+    }, [isSuccess, isUpdateSuccess])
+
+    useEffect(() => {
+        if (existingDocument) {
+            setOpen(true);
+        }
+    }, [existingDocument]);
+
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen);
+        if (!newOpen && onClose) {
+            onClose();
+        }
+    };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
             <DialogContent className="w-full max-w-xl">
                 <DialogHeader>
-                    <DialogTitle>New Document</DialogTitle>
+                    <DialogTitle>
+                        {mode === 'edit' ? 'Edit Document' : 'New Document'}
+                    </DialogTitle>
                     <DialogDescription>
                         Add a new document to your viva context
                     </DialogDescription>
                 </DialogHeader>
                 <Formik<DocumentFormValues>
                     initialValues={{
-                        title: '',
-                        description: '',
-                        category: '',
+                        title: existingDocument?.title || '',
+                        description: existingDocument?.description || '',
+                        category: existingDocument?.category || '',
                         file: null
                     }}
                     validationSchema={validationSchema}
                     onSubmit={(values, { resetForm }) => {
-                        const data = {
-                            ...values,
-                            vivaSessionId: "cm3gt1ps0000dkdmjtzf7hvqe"
+                        if (mode === 'edit' && existingDocument) {
+                            const data = {
+                                ...values,
+                                id: existingDocument.id,
+                                fileName: existingDocument.fileName,
+                                filePath: existingDocument.filePath
+                            }
+                            updateDocument(data);
+                        } else {
+                            uploadDocument({
+                                ...values,
+                                vivaSessionId: "cm3gt1ps0000dkdmjtzf7hvqe"
+                            });
                         }
-
-                        uploadDocument(data)
-                        resetForm()
+                        resetForm();
                     }}
                 >
-                    {({ errors, touched, setFieldValue }) => (
+                    {({ errors, touched, setFieldValue, values }) => (
                         <Form className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="title">Title</Label>
@@ -107,7 +149,11 @@ const NewDocumentForm = ({ children }: Props) => {
 
                             <div className="space-y-2">
                                 <Label htmlFor="category">Category</Label>
-                                <Select name="category" onValueChange={(value) => setFieldValue('category', value)}>
+                                <Select
+                                    name="category"
+                                    onValueChange={(value) => setFieldValue('category', value)}
+                                    value={values.category}
+                                >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
@@ -126,7 +172,12 @@ const NewDocumentForm = ({ children }: Props) => {
 
                             <div className="space-y-2">
                                 <Label>Document</Label>
-                                <FileUpload setFieldValue={setFieldValue} onDrop={onDrop} />
+                                <FileUpload
+                                    setFieldValue={setFieldValue}
+                                    onDrop={onDrop}
+                                    isEditingDocument={mode === 'edit'}
+                                    existingDocumentFile={existingDocument?.file}
+                                />
                                 {errors.file && touched.file && (
                                     <p className="text-sm text-red-500">{errors.file}</p>
                                 )}
@@ -136,9 +187,9 @@ const NewDocumentForm = ({ children }: Props) => {
                                 <Button
                                     className='w-full'
                                     type="submit"
-                                    disabled={isPending}
+                                    disabled={isPending || isUpdatePending}
                                 >
-                                    {isPending ? (
+                                    {isPending || isUpdatePending ? (
                                         <>
                                             <svg
                                                 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
@@ -160,10 +211,10 @@ const NewDocumentForm = ({ children }: Props) => {
                                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                                 />
                                             </svg>
-                                            Uploading...
+                                            {mode === 'edit' ? 'Updating...' : 'Uploading...'}
                                         </>
                                     ) : (
-                                        'Upload Document'
+                                        mode === 'edit' ? 'Update Document' : 'Upload Document'
                                     )}
                                 </Button>
                             </DialogFooter>

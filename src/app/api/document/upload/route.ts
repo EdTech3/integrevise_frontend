@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const title = formData.get('title') as string;
-    // const description = formData.get('description') as string;
+    const description = formData.get('description') as string;
     const category = formData.get('category') as string;
     const vivaSessionId = formData.get('vivaSessionId') as string;
 
@@ -54,7 +54,9 @@ export async function POST(request: Request) {
         title,
         category: category as DocumentCategory,
         type: documentType as DocumentType,
+        description,
         filePath: uniqueFileName,
+        fileName: file.name,
         priority: 1,
         isRequired: false,
         status: 'PENDING',
@@ -65,7 +67,7 @@ export async function POST(request: Request) {
     // Base Url
     const baseUrl = "http://localhost:3000";
     // Trigger document processing
-    await fetch(`${baseUrl}/api/document`, {
+    await fetch(`${baseUrl}/api/document/process`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

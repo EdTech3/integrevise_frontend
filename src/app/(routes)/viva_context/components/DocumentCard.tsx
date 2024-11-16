@@ -10,7 +10,7 @@ interface Props {
     description: string,
     category: DocumentCategory,
     updatedAt: Date,
-    onEdit: () => void
+    onEdit: (document: { title: string, description: string, category: DocumentCategory }) => void
     onDelete: () => void
 }
 
@@ -45,7 +45,11 @@ const DocumentCard = ({ title, description, category, updatedAt, onEdit, onDelet
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={onEdit}>
+                        <DropdownMenuItem onClick={() => onEdit({
+                            title,
+                            description,
+                            category,
+                        })}>
                             <Pencil className="mr-2 h-4 w-4" />
                             <span>Edit</span>
                         </DropdownMenuItem>

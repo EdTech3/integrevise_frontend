@@ -207,6 +207,7 @@ model Document {
   metadata    Json?           
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+  fileName    String?
 
   // Relations
   vivaSessionId String

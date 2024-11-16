@@ -144,15 +144,17 @@ async function main() {
       ]
     })
 
-    // Create test Documents with corrected categories
+    // Create test Documents with all required fields
     const assessmentBrief = await prisma.document.create({
       data: {
         title: 'Advanced Mobile Computing Assignment',
         type: 'WORD',
         category: 'ASSESSMENT_BRIEF',
-        priority: 2,
+        description: 'Assignment brief for the mobile computing module',
+        priority: 1,
         isRequired: true,
         filePath: 'IS3S664_2324_CW1M.docx',
+        fileName: 'IS3S664_2324_CW1M.docx',
         url: 'https://rnfuxprqrbfupmebbjwk.supabase.co/storage/v1/object/public/documents/IS3S664_2324_CW1M.docx',
         status: 'COMPLETED',
         metadata: {
@@ -166,22 +168,25 @@ async function main() {
 
     const studentSubmission = await prisma.document.create({
       data: {
-        title: 'Mobile Computing Assignment Brief',
+        title: 'Mobile App Development Project',
         type: 'PDF',
         category: 'STUDENT_WORK',
-        priority: 3,
+        description: 'Final project submission for mobile app development',
+        priority: 2,
         isRequired: true,
-        filePath: 'IS3S664_brief.pdf',
-        url: 'https://rnfuxprqrbfupmebbjwk.supabase.co/storage/v1/object/public/documents/IS3S664_brief.pdf',
+        filePath: 'Tic_Tac_Zone_Android.pdf',
+        fileName: 'Tic_Tac_Zone_Android.pdf',
+        url: 'https://rnfuxprqrbfupmebbjwk.supabase.co/storage/v1/object/public/documents/Tic_Tac_Zone_Android.pdf',
         status: 'COMPLETED',
         metadata: {
-          pageCount: 3,
-          wordCount: 800,
-          fileSize: '500KB'
+          pageCount: 15,
+          wordCount: 3000,
+          fileSize: '2.5MB'
         },
         vivaSessionId: vivaSession.id
       }
     });
+
 
     console.log('Database has been seeded! 🌱')
   } catch (error) {

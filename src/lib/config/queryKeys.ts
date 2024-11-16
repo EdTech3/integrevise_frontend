@@ -3,6 +3,7 @@ export const queryKeys = {
     all: ['documents'] as const,
     list: (vivaSessionId: string) => [...queryKeys.documents.all, vivaSessionId] as const,
     detail: (id: string) => [...queryKeys.documents.all, id] as const,
+    instance: (id: string) => [...queryKeys.documents.all, id] as const,
   },
   assessment: {
     all: ['assessment'] as const,

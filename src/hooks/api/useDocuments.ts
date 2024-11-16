@@ -69,5 +69,21 @@ export function useUploadDocument() {
   });
 }
 
+export function useUpdateDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: documentsApi.update,
+    onError: () => {
+      errorToast('Failed to update document');
+    },
+    onSuccess: () => {
+      successToast('Document updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.all });
+    },
+  });
+}
+
+
 
 

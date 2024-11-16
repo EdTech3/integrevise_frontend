@@ -1,21 +1,28 @@
-import { resolveBlobMimeType } from "@/lib/utils/documentFormatParsing"
-import { useDropzone } from "react-dropzone"
-import { BsFileEarmarkPdfFill } from "react-icons/bs"
-import { SiMicrosoftword } from "react-icons/si"
+import { useDropzone } from "react-dropzone";
+import UploadDocumentCard from "./UploadDocumentCard";
+import { useEffect } from "react";
 
-const FileUpload = ({ setFieldValue, onDrop }: {
+interface Props {
     setFieldValue: (field: string, value: any) => void,
-    onDrop: (acceptedFiles: File[], setFieldValue: (field: string, value: any) => void) => void
-}) => {
+    onDrop: (acceptedFiles: File[], setFieldValue: (field: string, value: any) => void) => void,
+    existingDocumentFile?: {
+        networkStatus: "idle" | "loading" | "success" | "error";
+        content: File | null
+    },
+    isEditingDocument: boolean
+}
+
+const FileUpload = ({ setFieldValue, onDrop, existingDocumentFile, isEditingDocument }: Props) => {
     const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
         onDrop: (acceptedFiles) => onDrop(acceptedFiles, setFieldValue),
         multiple: false
     })
 
-    const IconMap: Record<string, JSX.Element> = {
-        "PDF": <BsFileEarmarkPdfFill />,
-        "WORD": <SiMicrosoftword />,
-    }
+    useEffect(() => {
+        if (isEditingDocument && existingDocumentFile?.content) {
+            setFieldValue('file', existingDocumentFile.content)
+        }
+    }, [isEditingDocument, existingDocumentFile?.content, setFieldValue])
 
     return (
         <div className="space-y-2">
@@ -30,7 +37,7 @@ const FileUpload = ({ setFieldValue, onDrop }: {
                     <p className="text-sm text-muted-foreground">Drop the file here...</p>
                 ) : (
                     <p className="text-sm text-muted-foreground">
-                        {acceptedFiles[0] ?
+                        {acceptedFiles[0] || existingDocumentFile?.content ?
                             <span>Replace the file by drag & drop or click here </span> :
                             <span>
                                 Drag & drop a file here, or click to select a file
@@ -39,17 +46,16 @@ const FileUpload = ({ setFieldValue, onDrop }: {
                     </p>
                 )}
             </div>
-            {acceptedFiles[0] && (
-                <div className="inline-flex items-center gap-2 text-foreground rounded-lg bg-secondary-100 border border-foreground p-3">
-                    <span className="text-xl">
-                        {IconMap[resolveBlobMimeType(acceptedFiles[0])]}
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                        {acceptedFiles[0].name}
-                    </p>
-                </div>
+            {acceptedFiles[0] && <UploadDocumentCard acceptedFile={acceptedFiles[0]} />}
 
-            )}
+            {!acceptedFiles[0] && isEditingDocument && existingDocumentFile?.content && existingDocumentFile.networkStatus === "success"
+                && <UploadDocumentCard acceptedFile={existingDocumentFile.content} />}
+
+            {!acceptedFiles[0] && isEditingDocument && existingDocumentFile?.networkStatus === "error"
+                && <p className="text-sm text-muted-foreground">Error getting existing document</p>}
+
+            {!acceptedFiles[0] && isEditingDocument && !existingDocumentFile?.content && existingDocumentFile?.networkStatus === "loading"
+                && <p className="text-sm text-muted-foreground">Getting existing document...</p>}
         </div>
     )
 }

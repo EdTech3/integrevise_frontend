@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { processDocument } from '../../../lib/services/documentProcessor';
+import { processDocument } from '../../../../lib/services/documentProcessor';
 
 export async function POST(request: Request) {
   try {

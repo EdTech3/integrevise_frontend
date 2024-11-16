@@ -8,7 +8,7 @@ import mammoth from 'mammoth'
 import PDFParser from 'pdf2json'
 
 async function parseBlob(blob: Blob, type: DocumentType): Promise<string> {
-  console.log("Parsing blob:", blob); 
+  console.log("Parsing blob:", blob, "Type:", type); 
   try {
     switch (type) {
       case 'WORD':

@@ -14,11 +14,6 @@ export async function GET(request: Request) {
       where: {
         vivaSessionId: vivaSessionId
       },
-      select: {
-        title: true,
-        category: true,
-        updatedAt: true,
-      },
       orderBy: {
         updatedAt: 'desc'
       }

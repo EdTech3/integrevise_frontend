@@ -1,16 +1,19 @@
 'use client'
-
-import { useDocuments } from '@/hooks/api/useDocuments';
-import DocumentCard from './components/DocumentCard';
-import NewDocumentForm from './components/NewDocumentForm';
-import { Button } from '@/components/ui/button';
-import { FaPlus } from 'react-icons/fa';
 import Container from '@/components/shared/Container';
-import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { useDocuments } from '@/hooks/api/useDocuments';
+import { documentsApi } from '@/lib/services/api';
+import { errorToast } from '@/lib/toast';
+import { useState } from 'react';
+import { FaPlus } from 'react-icons/fa';
+import DocumentCard from './components/DocumentCard';
+import NewDocumentForm, { EditDocument } from './components/NewDocumentForm';
+
 
 
 const VivaContext = () => {
-  const vivaSessionId = "cm3gt1ps0000dkdmjtzf7hvqe"; // Get this from your auth context or route params
+  const vivaSessionId = "cm3kbiwu7000d133oz0m9r8cv";
+  const [documentToEdit, setDocumentToEdit] = useState<EditDocument | null>(null);
 
   const {
     data: documents,
@@ -18,19 +21,45 @@ const VivaContext = () => {
     error
   } = useDocuments(vivaSessionId);
 
+  const handleEdit = async (document: EditDocument) => {
+    setDocumentToEdit(document);
 
-  useEffect(() => {
-    console.log("Documents", documents)
-  }, [documents])
+    try {
+      const file = await documentsApi.getDocumentFile(document.id);
 
+      if (file) {
+        setDocumentToEdit({
+          ...document,
+          file: {
+            networkStatus: "success",
+            content: file
+          }
+        })
+      } else {
+        setDocumentToEdit({
+          ...document,
+          file: {
+            networkStatus: "error",
+            content: null
+          }
+        })
 
-  if (isLoading) {
-    return <h1>Loading...</h1>
-  }
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        errorToast(error.message);
+      } else {
+        errorToast("Failed to get existing document");
+      }
+    }
+  };
 
-  if (error) {
-    return <h1>Error: {error.message}</h1>
-  }
+  const handleDelete = () => {
+    // Implement delete functionality
+  };
+
+  if (isLoading) return <h1>Loading...</h1>;
+  if (error) return <h1>Error: {error.message}</h1>;
 
   return (
     <Container>
@@ -44,18 +73,43 @@ const VivaContext = () => {
           </NewDocumentForm>
         </section>
         <section className='grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4'>
-          {documents?.map((doc) => (
-            <DocumentCard
-              key={doc.title}
-              title={doc.title}
-              description={"Hello world"}
-              category={doc.category}
-              updatedAt={new Date(doc.updatedAt)}
-              onEdit={() => { }}
-              onDelete={() => { }}
-            />
-          ))}
+          {documents?.map((doc) => {
+            return (
+              <DocumentCard
+                key={doc.id}
+                title={doc.title}
+                description={doc.description || ""}
+                category={doc.category}
+                updatedAt={new Date(doc.updatedAt)}
+                onEdit={() => handleEdit(
+                  {
+                    id: doc.id,
+                    title: doc.title,
+                    description: doc.description || "",
+                    category: doc.category,
+                    fileName: doc.fileName || "",
+                    filePath: doc.filePath || "",
+                    file: {
+                      networkStatus: "loading",
+                      content: null
+                    }
+                  })}
+                onDelete={handleDelete}
+              />
+            )
+          })}
         </section>
+
+        {/* Edit Form Dialog */}
+        {documentToEdit && (
+          <NewDocumentForm
+            mode="edit"
+            existingDocument={documentToEdit}
+            onClose={() => setDocumentToEdit(null)}
+          >
+            <div style={{ display: 'none' }} />
+          </NewDocumentForm>
+        )}
       </main>
     </Container>
   );

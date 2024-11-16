@@ -15,3 +15,7 @@ export function checkSupportedType(resolvedType: string) {
     const supportedTypes = ["PDF", "WORD"]
     return supportedTypes.includes(resolvedType)
 }
+
+export function getFileNameFromPath(filePath: string) {
+    return filePath.split('-')[1]
+}
