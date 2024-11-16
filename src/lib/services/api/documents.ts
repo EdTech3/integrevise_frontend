@@ -87,5 +87,9 @@ export const documentsApi = {
             'Content-Type': 'multipart/form-data',
         },
     });
+  },
+
+  delete: async (documentId: string): Promise<void> => {
+    await axiosInstance.delete(`${API_ROUTES.documents.delete}/?documentId=${documentId}`);
   }
 };

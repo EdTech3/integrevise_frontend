@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
-import { DocumentCategory, DocumentType } from '@prisma/client';
 import { checkSupportedType, resolveBlobMimeType } from '@/lib/utils/documentFormatParsing';
+import { DocumentCategory, DocumentType } from '@prisma/client';
+import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
@@ -48,21 +47,38 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create document record in database
+    console.log("Document to create:", {
+      title,
+      category: category as DocumentCategory,
+      type: documentType as DocumentType,
+      description,
+      filePath: uniqueFileName,
+      fileName: file.name,
+      vivaSessionId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      priority: 1,
+      isRequired: false,
+      status: 'PENDING'
+    })
+
+    // Create document record in database using Supabase
     const document = await prisma.document.create({
       data: {
         title,
-        category: category as DocumentCategory,
-        type: documentType as DocumentType,
+        category,
+        type: documentType,
         description,
         filePath: uniqueFileName,
         fileName: file.name,
         priority: 1,
         isRequired: false,
         status: 'PENDING',
-        vivaSessionId
-      },
+        vivaSessionId,
+      }
     });
+
+    console.log("Document created:", document)
 
     // Base Url
     const baseUrl = "http://localhost:3000";

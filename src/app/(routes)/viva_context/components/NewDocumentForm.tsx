@@ -44,6 +44,7 @@ interface Props {
     mode?: 'create' | 'edit';
     existingDocument?: EditDocument;
     onClose?: () => void;
+    vivaSessionId: string;
 }
 
 const validationSchema = Yup.object().shape({
@@ -54,7 +55,7 @@ const validationSchema = Yup.object().shape({
 })
 
 
-const NewDocumentForm = ({ children, mode, existingDocument, onClose }: Props) => {
+const NewDocumentForm = ({ children, mode, existingDocument, onClose, vivaSessionId }: Props) => {
     const [open, setOpen] = useState(false)
     const onDrop = useCallback((acceptedFiles: File[], setFieldValue: (field: string, value: any) => void) => {
         setFieldValue('file', acceptedFiles[0])
@@ -116,7 +117,7 @@ const NewDocumentForm = ({ children, mode, existingDocument, onClose }: Props) =
                         } else {
                             uploadDocument({
                                 ...values,
-                                vivaSessionId: "cm3gt1ps0000dkdmjtzf7hvqe"
+                                vivaSessionId
                             });
                         }
                         resetForm();

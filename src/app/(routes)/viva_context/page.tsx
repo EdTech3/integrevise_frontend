@@ -1,7 +1,7 @@
 'use client'
 import Container from '@/components/shared/Container';
 import { Button } from '@/components/ui/button';
-import { useDocuments } from '@/hooks/api/useDocuments';
+import { useDocuments, useDeleteDocument } from '@/hooks/api/useDocuments';
 import { documentsApi } from '@/lib/services/api';
 import { errorToast } from '@/lib/toast';
 import { useState } from 'react';
@@ -20,6 +20,8 @@ const VivaContext = () => {
     isLoading,
     error
   } = useDocuments(vivaSessionId);
+
+  const { mutate: deleteDocument } = useDeleteDocument();
 
   const handleEdit = async (document: EditDocument) => {
     setDocumentToEdit(document);
@@ -54,8 +56,8 @@ const VivaContext = () => {
     }
   };
 
-  const handleDelete = () => {
-    // Implement delete functionality
+  const handleDelete = (documentId: string) => {
+    deleteDocument(documentId);
   };
 
   if (isLoading) return <h1>Loading...</h1>;
@@ -66,7 +68,7 @@ const VivaContext = () => {
       <main className='py-2 min-h-screen flex flex-col space-y-4'>
         <section className='flex items-center justify-between'>
           <h1 className='text-3xl font-semibold'>Viva Context</h1>
-          <NewDocumentForm>
+          <NewDocumentForm vivaSessionId={vivaSessionId}>
             <Button size={"icon"}>
               <FaPlus />
             </Button>
@@ -94,7 +96,7 @@ const VivaContext = () => {
                       content: null
                     }
                   })}
-                onDelete={handleDelete}
+                onDelete={() => handleDelete(doc.id)}
               />
             )
           })}
@@ -103,6 +105,7 @@ const VivaContext = () => {
         {/* Edit Form Dialog */}
         {documentToEdit && (
           <NewDocumentForm
+            vivaSessionId={vivaSessionId}
             mode="edit"
             existingDocument={documentToEdit}
             onClose={() => setDocumentToEdit(null)}

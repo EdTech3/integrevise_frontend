@@ -5,6 +5,7 @@ export const API_ROUTES = {
     upload: '/document/upload',
     edit: '/document/edit',
     instance: '/document/instance',
+    delete: '/document/delete',
   },
   subjects: {
     list: '/subjects',

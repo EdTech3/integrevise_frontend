@@ -84,6 +84,21 @@ export function useUpdateDocument() {
   });
 }
 
+export function useDeleteDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: documentsApi.delete,
+    onError: () => {
+      errorToast('Failed to delete document');
+    },
+    onSuccess: () => {
+      successToast('Document deleted successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.all });
+    },
+  });
+}
+
 
 
 
