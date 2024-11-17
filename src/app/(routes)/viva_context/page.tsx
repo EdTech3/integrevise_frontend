@@ -8,18 +8,19 @@ import { useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import DocumentCard from './components/DocumentCard';
 import NewDocumentForm, { EditDocument } from './components/NewDocumentForm';
+import { useVivaSession } from '@/lib/store';
 
 
 
 const VivaContext = () => {
-  const vivaSessionId = "cm3kbiwu7000d133oz0m9r8cv";
+  const { sessionId: vivaSessionId } = useVivaSession();
   const [documentToEdit, setDocumentToEdit] = useState<EditDocument | null>(null);
 
   const {
     data: documents,
     isLoading,
     error
-  } = useDocuments(vivaSessionId);
+  } = useDocuments(vivaSessionId || "");
 
   const { mutate: deleteDocument } = useDeleteDocument();
 
@@ -62,6 +63,7 @@ const VivaContext = () => {
 
   if (isLoading) return <h1>Loading...</h1>;
   if (error) return <h1>Error: {error.message}</h1>;
+  if (!vivaSessionId) return <h1>No session ID found</h1>;
 
   return (
     <Container>

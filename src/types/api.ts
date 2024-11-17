@@ -24,3 +24,18 @@ export interface VivaSession {
   status: string;
   facialRecognitionStatus: boolean;
 }
+
+// Add these interfaces alongside existing ones
+export interface Question {
+  main: string;
+  friendlyVersion: string;
+  followUp: string[];
+  friendlyFollowUp: string[];
+  context: string;
+  criteria: string;
+  encouragement: string;
+}
+
+export interface QuestionsResponse {
+  questions: Question[];
+}

@@ -1,6 +1,6 @@
 import CountdownTimer from '../../audio_test/components/CountdownTimer'
 import AIAvatar from './AIAvatar'
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { errorToast } from '@/lib/toast';
 import { AIAvatarExpression } from '../type';
 
@@ -9,12 +9,14 @@ interface AISectionProps {
     error: string | null;
     isLoading: boolean;
     isSpeaking: boolean;
+    question: string | null | undefined;
+    questionsLoading: boolean;
 }
 
-const AISection = ({ convertToSpeech, error, isLoading, isSpeaking }: AISectionProps) => {
+const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, questionsLoading }: AISectionProps) => {
     const [displayedText, setDisplayedText] = useState('');
     const [expression, setExpression] = useState<AIAvatarExpression>('neutral');
-    const fullText = `In your document, you mentioned the role of text-to-image diffusion in generating high-quality images from natural language descriptions. Could you elaborate on how this process works and how it contributes to the overall image quality? I'd love to hear your thoughts on the key factors that make it effective.`;
+
 
     useEffect(() => {
         if (isSpeaking) {
@@ -26,28 +28,18 @@ const AISection = ({ convertToSpeech, error, isLoading, isSpeaking }: AISectionP
         }
     }, [isSpeaking, isLoading]);
 
-    const handleSpeak = async () => {
-        if (isSpeaking) return;
+    const handleSpeak = useCallback(async () => {
         if (isLoading) return;
-        try {
-            const result = await convertToSpeech(fullText);
-            if (result) {
-                const { audio, streamDelay } = result;
+        if (questionsLoading) return;
+        if (!question) return;
 
-                // Start playing audio
-                audio.play();
-
-                // Start streaming text with calculated delay
-                setDisplayedText('');
-                for (let i = 0; i < fullText.length; i++) {
-                    await new Promise(resolve => setTimeout(resolve, streamDelay));
-                    setDisplayedText(prev => prev + fullText[i]);
-                }
-            }
-        } catch (err) {
-            console.error('Error speaking:', err);
+        setDisplayedText('');
+        const CHAR_DELAY = 50;
+        for (let i = 0; i < question.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, CHAR_DELAY));
+            setDisplayedText(prev => prev + question[i]);
         }
-    };
+    }, [isLoading, questionsLoading, question]);
 
     useEffect(() => {
         if (error) {
@@ -55,16 +47,18 @@ const AISection = ({ convertToSpeech, error, isLoading, isSpeaking }: AISectionP
         }
     }, [error])
 
+    useEffect(() => {
+        handleSpeak();
+    }, [handleSpeak]);
+
     return (
         <section className='space-y-20 px-4 h-1/2'>
             <div className='flex justify-between items-center'>
-                <figure onClick={handleSpeak}>
-                    <AIAvatar expression={expression} />
-                </figure>
+                <AIAvatar expression={expression} />
                 <CountdownTimer time={120} />
             </div>
-            {isLoading && <p className='text-center text-base sm:text-lg md:text-xl lg:text-2xl'>Loading Your Question...</p>}
-            {!isLoading &&
+            {isLoading || questionsLoading && <p className='text-center text-base sm:text-lg md:text-xl lg:text-2xl'>Loading Your Question...</p>}
+            {!isLoading && !questionsLoading &&
                 <p className='text-center text-base sm:text-lg md:text-xl lg:text-2xl'>
                     {displayedText}
                 </p>

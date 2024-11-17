@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
 import { API_ROUTES } from '@/lib/config/api';
-import { APIResponse } from '@/types/api';
 
 interface AssessmentRequest {
   vivaSessionId: string;
@@ -21,10 +20,11 @@ interface Assessment {
 
 export const assessmentApi = {
   assess: async (data: AssessmentRequest): Promise<Assessment> => {
-    const response = await axiosInstance.post<APIResponse<Assessment>>(
+    const response = await axiosInstance.post(
       API_ROUTES.assessment,
       data
     );
-    return response.data.data!;
+
+    return response.data;
   }
 };

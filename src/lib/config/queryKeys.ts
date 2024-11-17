@@ -13,4 +13,8 @@ export const queryKeys = {
     all: ['subjects'] as const,
     detail: (id: string) => [...queryKeys.subjects.all, id] as const,
   },
+  questions: {
+    all: ['questions'] as const,
+    get: (vivaSessionId: string) => [...queryKeys.questions.all, vivaSessionId] as const,
+  },
 } as const;
