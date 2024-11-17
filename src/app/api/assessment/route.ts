@@ -1,3 +1,4 @@
+import prisma from '@/lib/prisma';
 import { getSimilarChunks } from '@/lib/services/openAIService';
 import { formatAssessmentContext, performAssessment, prepareCriteriaList } from '@/lib/services/questionAssessment';
 import { getVivaSessionWithSubjectDetails } from '@/lib/services/vivaSession';
@@ -46,6 +47,19 @@ export async function POST(request: Request) {
     const formattedContext = formatAssessmentContext(relevantChunks);
     const subjectCriteriaList = prepareCriteriaList(vivaSession);
 
+    // Check if question is already assessed
+    const isQuestionAssessed = await prisma.questionAnswer.findUnique({
+      where: { id: question.id }
+    })
+
+    if(!isQuestionAssessed) {
+      return NextResponse.json({success: false, message: "Question not found"}, {status: 404});
+    }
+
+    if (isQuestionAssessed?.answer) {
+      return NextResponse.json({success: true, message: "Question already have an answer"}, {status: 200});
+    }
+
     // Perform assessment
     const assessment: Assessment = await performAssessment(
       vivaSession.subject.name,
@@ -82,7 +96,7 @@ export async function POST(request: Request) {
       data: updatedCriteria
     })
 
-    return NextResponse.json({success: true});
+    return NextResponse.json({success: true, message: "Answer Recorded Successfully"}, {status: 200});
     
   } catch (error) {
     console.error('Error assessing answer:', error);

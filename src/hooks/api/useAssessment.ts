@@ -8,8 +8,5 @@ export function useAssessment() {
     onError: () => {
       toast.error('Failed to assess answer');
     },
-    onSuccess: () => {
-      toast.success('Assessment completed');
-    },
   });
 }

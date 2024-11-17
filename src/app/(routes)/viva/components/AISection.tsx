@@ -11,9 +11,11 @@ interface AISectionProps {
     isSpeaking: boolean;
     question: string | null | undefined;
     questionsLoading: boolean;
+    totalQuestions: number;
+    currentQuestionIndex: number;
 }
 
-const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, questionsLoading }: AISectionProps) => {
+const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, questionsLoading, totalQuestions, currentQuestionIndex }: AISectionProps) => {
     const [displayedText, setDisplayedText] = useState('');
     const [expression, setExpression] = useState<AIAvatarExpression>('neutral');
 
@@ -52,17 +54,24 @@ const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, qu
     }, [handleSpeak]);
 
     return (
-        <section className='space-y-20 px-4 h-1/2'>
+        <section className='space-y-10 px-4 h-1/2'>
             <div className='flex justify-between items-center'>
                 <AIAvatar expression={expression} />
                 <CountdownTimer time={120} />
             </div>
-            {isLoading || questionsLoading && <p className='text-center text-base sm:text-lg md:text-xl lg:text-2xl'>Loading Your Question...</p>}
-            {!isLoading && !questionsLoading &&
-                <p className='text-center text-base sm:text-lg md:text-xl lg:text-2xl'>
-                    {displayedText}
-                </p>
-            }
+            <div className='space-y-4'>
+                {!questionsLoading &&
+                    <div className='text-center'>
+                        <span className='text-secondary-200'>{currentQuestionIndex}</span> of <span className='text-foreground'>{totalQuestions}</span>
+                    </div>
+                }
+                {isLoading || questionsLoading && <p className='text-center text-base sm:text-lg md:text-xl lg:text-2xl'>Loading Your Question...</p>}
+                {!isLoading && !questionsLoading &&
+                    <p className='text-center text-base sm:text-lg md:text-xl lg:text-2xl'>
+                        {displayedText}
+                    </p>
+                }
+            </div>
         </section>
     )
 }

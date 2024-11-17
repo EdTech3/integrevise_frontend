@@ -3,19 +3,13 @@ import { API_ROUTES } from '@/lib/config/api';
 import { AssessmentRequest } from '@/types/api';
 
 
-interface Assessment {
-  overallEvaluation: string;
-  assessments: Array<{
-    criteriaId: string;
-    score: number;
-    evidence: string;
-    feedback: string;
-  }>;
-  suggestedFollowUp: string[];
+interface AssessmentResponse {
+  success: boolean;
+  message: string;
 }
 
 export const assessmentApi = {
-  assess: async (data: AssessmentRequest): Promise<Assessment> => {
+  assess: async (data: AssessmentRequest): Promise<AssessmentResponse> => {
     const response = await axiosInstance.post(
       API_ROUTES.assessment,
       data

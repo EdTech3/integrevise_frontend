@@ -1,16 +1,23 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import AISection from './components/AISection'
-import StudentSection from './components/StudentSection'
+import { useAssessment } from '@/hooks/api/useAssessment'
+import { useQuestions } from '@/hooks/api/useQuestions'
 import useDeepgramSTT from '@/hooks/useDeepgramSTT'
 import { useDeepgramTTS } from '@/hooks/useDeepgramTTS'
 import useApiKey from '@/hooks/useDeepgramTempAPIKey'
 import { useVivaSession } from '@/lib/store'
-import { useQuestions } from '@/hooks/api/useQuestions'
-import SimpleStudentSection from './components/SimpleStudentSection'
-import { useAssessment } from '@/hooks/api/useAssessment'
 import { QuestionAnswer } from '@prisma/client'
+import { useEffect, useState } from 'react'
+import AISection from './components/AISection'
+import SimpleStudentSection from './components/SimpleStudentSection'
+import SuccessDialog from './components/SuccessDialog'
+import ProcessingDialog from './components/ProcessingDialog'
+import QuestionLoadingDialog from './components/QuestionLoadingDialog'
+import { successToast } from '@/lib/toast'
+
+//TODO: Add a loading state in the student section
+//TODO: Implement the timer
+//TODO: Handle transition to the next question when the answer is assessed
 
 const Viva = () => {
     const { apiKey } = useApiKey();
@@ -24,11 +31,13 @@ const Viva = () => {
 
     const { sessionId: vivaSessionId } = useVivaSession();
 
-    const { data: questionsData, isLoading: questionsLoading } = useQuestions(vivaSessionId || "");
+    const { data: questionsData, isLoading: isQuestionsLoading } = useQuestions(vivaSessionId || "");
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [currentQuestion, setCurrentQuestion] = useState<QuestionAnswer | null>(null);
 
     const { mutate: assess, isPending: isAssessing } = useAssessment();
+
+    const [isComplete, setIsComplete] = useState(false);
 
     const moveToNextQuestion = () => {
         if (!questionsData || !questionsData.length) return;
@@ -37,6 +46,8 @@ const Viva = () => {
         if (nextIndex < questionsData.length) {
             setCurrentQuestionIndex(nextIndex);
             setCurrentQuestion(questionsData[nextIndex]);
+        } else {
+            setIsComplete(true);
         }
     };
 
@@ -52,7 +63,7 @@ const Viva = () => {
             answer: transcript
         }, {
             onSuccess: (response) => {
-                console.log('Assessment response:', response);
+                successToast(response.message);
                 moveToNextQuestion();
             },
         });
@@ -90,27 +101,20 @@ const Viva = () => {
             <AISection
                 isSpeaking={isSpeaking}
                 isLoading={isLoading}
-                questionsLoading={questionsLoading}
+                questionsLoading={isQuestionsLoading}
                 convertToSpeech={convertToSpeech}
                 error={error}
                 question={currentQuestion?.friendlyQuestion}
+                totalQuestions={questionsData?.length || 0}
+                currentQuestionIndex={currentQuestionIndex + 1}
             />
-            {/* 
-            <StudentSection
-                isListening={isListening}
-                transcript={transcript}
-                startListening={startListening}
-                stopListening={stopListening}
-                audioStream={audioStream}
-                error={sttError?.message}
-                hasStopped={hasStopped}
-                sendStudentMessage={sendStudentMessage}
-            /> */}
-
             <SimpleStudentSection
                 transcript={"My reason is very simple"}
                 sendStudentMessage={sendStudentMessage}
             />
+            <QuestionLoadingDialog open={isQuestionsLoading} />
+            <ProcessingDialog open={isAssessing} />
+            <SuccessDialog open={isComplete} />
         </main>
     )
 }
