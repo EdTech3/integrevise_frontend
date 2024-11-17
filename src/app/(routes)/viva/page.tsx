@@ -14,6 +14,7 @@ import SuccessDialog from './components/SuccessDialog'
 import ProcessingDialog from './components/ProcessingDialog'
 import QuestionLoadingDialog from './components/QuestionLoadingDialog'
 import { successToast } from '@/lib/toast'
+import { useQuestionTimer } from '@/hooks/useQuestionTimer'
 
 //TODO: Add a loading state in the student section
 //TODO: Implement the timer
@@ -38,6 +39,8 @@ const Viva = () => {
     const { mutate: assess, isPending: isAssessing } = useAssessment();
 
     const [isComplete, setIsComplete] = useState(false);
+    const [questionDisplayTime, setQuestionDisplayTime] = useState<Date | null>(null);
+    const timer = useQuestionTimer();
 
     const moveToNextQuestion = () => {
         if (!questionsData || !questionsData.length) return;
@@ -52,23 +55,26 @@ const Viva = () => {
     };
 
     const sendStudentMessage = async (transcript: string) => {
-        // stopListening();
-
+        timer.stopTimer();
         assess({
             vivaSessionId: vivaSessionId || "",
             question: {
                 id: currentQuestion?.id || "",
                 text: currentQuestion?.question || ""
             },
-            answer: transcript
+            answer: transcript,
+            timing: {
+                displayedAt: questionDisplayTime?.toISOString() || new Date().toISOString(),
+                answeredAt: new Date().toISOString()
+            }
         }, {
             onSuccess: (response) => {
                 successToast(response.message);
+                setQuestionDisplayTime(null);
                 moveToNextQuestion();
             },
         });
     }
-
 
     // Side Effects
     useEffect(() => {
@@ -81,7 +87,6 @@ const Viva = () => {
         }
     }, [questionsData, currentQuestionIndex]);
 
-
     useEffect(() => {
         if (shouldStartListening && apiKey && !isListening) {
             startListening();
@@ -89,12 +94,17 @@ const Viva = () => {
         }
     }, [shouldStartListening, apiKey, isListening, startListening]);
 
-
     useEffect(() => {
         console.log("Student stopped speaking", hasStopped);
     }, [hasStopped]);
 
-
+    useEffect(() => {
+        if (currentQuestion?.id) {
+            timer.resetTimer();
+            timer.startTimer();
+            setQuestionDisplayTime(new Date());
+        }
+    }, [currentQuestion?.id]);
 
     return (
         <main className='pt-6 flex flex-col h-screen overflow-hidden'>
@@ -107,6 +117,7 @@ const Viva = () => {
                 question={currentQuestion?.friendlyQuestion}
                 totalQuestions={questionsData?.length || 0}
                 currentQuestionIndex={currentQuestionIndex + 1}
+                time={timer.time}
             />
             <SimpleStudentSection
                 transcript={"My reason is very simple"}

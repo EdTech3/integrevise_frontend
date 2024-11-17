@@ -1,10 +1,10 @@
-import CountdownTimer from '../../audio_test/components/CountdownTimer'
-import AIAvatar from './AIAvatar'
-import { useEffect, useState, useCallback } from 'react';
+import QuestionTimer from '@/components/shared/QuestionTimer';
 import { errorToast } from '@/lib/toast';
+import { useCallback, useEffect, useState } from 'react';
 import { AIAvatarExpression } from '../type';
+import AIAvatar from './AIAvatar';
 
-interface AISectionProps {
+interface Props {
     convertToSpeech: (text: string) => Promise<{ audio: HTMLAudioElement, streamDelay: number } | null>;
     error: string | null;
     isLoading: boolean;
@@ -13,9 +13,10 @@ interface AISectionProps {
     questionsLoading: boolean;
     totalQuestions: number;
     currentQuestionIndex: number;
+    time: string
 }
 
-const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, questionsLoading, totalQuestions, currentQuestionIndex }: AISectionProps) => {
+const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, questionsLoading, totalQuestions, currentQuestionIndex, time }: Props) => {
     const [displayedText, setDisplayedText] = useState('');
     const [expression, setExpression] = useState<AIAvatarExpression>('neutral');
 
@@ -57,7 +58,7 @@ const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, qu
         <section className='space-y-10 px-4 h-1/2'>
             <div className='flex justify-between items-center'>
                 <AIAvatar expression={expression} />
-                <CountdownTimer time={120} />
+                <QuestionTimer time={time} />
             </div>
             <div className='space-y-4'>
                 {!questionsLoading &&

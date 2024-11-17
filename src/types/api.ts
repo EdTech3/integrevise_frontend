@@ -43,4 +43,8 @@ export interface AssessmentRequest {
     text: string;
   };
   answer: string;
+  timing: {
+    displayedAt: string;
+    answeredAt: string;
+  };
 }
