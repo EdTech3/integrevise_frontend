@@ -1,11 +1,7 @@
 import { axiosInstance } from '@/lib/axios';
 import { API_ROUTES } from '@/lib/config/api';
+import { AssessmentRequest } from '@/types/api';
 
-interface AssessmentRequest {
-  vivaSessionId: string;
-  question: string;
-  answer: string;
-}
 
 interface Assessment {
   overallEvaluation: string;

@@ -36,6 +36,11 @@ export interface Question {
   encouragement: string;
 }
 
-export interface QuestionsResponse {
-  questions: Question[];
+export interface AssessmentRequest {
+  vivaSessionId: string;
+  question: {
+    id: string;
+    text: string;
+  };
+  answer: string;
 }

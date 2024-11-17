@@ -1,5 +1,6 @@
-import { openai } from './openAIService';
+import { Question } from '@/types/api';
 import { DocumentCategory } from '@prisma/client';
+import { openai } from './openAIService';
 
 interface FormattedChunk {
   content: string;
@@ -20,7 +21,11 @@ export function formatChunksForContext(chunks: FormattedChunk[]) {
     .join('\n\n');
 }
 
-export async function generateQuestions(subjectName: string, studentName: string, formattedContext: string) {
+interface GeneratedQuestionsResponse {
+  questions: Question[];    
+}
+
+export async function generateQuestions(subjectName: string, studentName: string, formattedContext: string): Promise<GeneratedQuestionsResponse> {
   const completion = await openai.chat.completions.create({
     messages: [{
       role: "system",

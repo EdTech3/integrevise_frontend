@@ -8,9 +8,9 @@ import { useDeepgramTTS } from '@/hooks/useDeepgramTTS'
 import useApiKey from '@/hooks/useDeepgramTempAPIKey'
 import { useVivaSession } from '@/lib/store'
 import { useQuestions } from '@/hooks/api/useQuestions'
-import { Question } from '@/types/api'
 import SimpleStudentSection from './components/SimpleStudentSection'
 import { useAssessment } from '@/hooks/api/useAssessment'
+import { QuestionAnswer } from '@prisma/client'
 
 const Viva = () => {
     const { apiKey } = useApiKey();
@@ -26,26 +26,29 @@ const Viva = () => {
 
     const { data: questionsData, isLoading: questionsLoading } = useQuestions(vivaSessionId || "");
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+    const [currentQuestion, setCurrentQuestion] = useState<QuestionAnswer | null>(null);
 
     const { mutate: assess, isPending: isAssessing } = useAssessment();
 
     const moveToNextQuestion = () => {
-        if (!questionsData || !questionsData.questions.length) return;
+        if (!questionsData || !questionsData.length) return;
 
         const nextIndex = currentQuestionIndex + 1;
-        if (nextIndex < questionsData.questions.length) {
+        if (nextIndex < questionsData.length) {
             setCurrentQuestionIndex(nextIndex);
-            setCurrentQuestion(questionsData.questions[nextIndex]);
+            setCurrentQuestion(questionsData[nextIndex]);
         }
     };
 
     const sendStudentMessage = async (transcript: string) => {
         // stopListening();
 
-        const response = await assess({
+        assess({
             vivaSessionId: vivaSessionId || "",
-            question: currentQuestion?.main || "",
+            question: {
+                id: currentQuestion?.id || "",
+                text: currentQuestion?.question || ""
+            },
             answer: transcript
         }, {
             onSuccess: (response) => {
@@ -58,8 +61,12 @@ const Viva = () => {
 
     // Side Effects
     useEffect(() => {
-        if (questionsData && questionsData.questions.length > 0) {
-            setCurrentQuestion(questionsData.questions[currentQuestionIndex]);
+        console.log("Questions:", questionsData);
+    }, [questionsData]);
+
+    useEffect(() => {
+        if (questionsData && questionsData.length > 0) {
+            setCurrentQuestion(questionsData[currentQuestionIndex]);
         }
     }, [questionsData, currentQuestionIndex]);
 
@@ -86,7 +93,7 @@ const Viva = () => {
                 questionsLoading={questionsLoading}
                 convertToSpeech={convertToSpeech}
                 error={error}
-                question={currentQuestion?.friendlyVersion}
+                question={currentQuestion?.friendlyQuestion}
             />
             {/* 
             <StudentSection
