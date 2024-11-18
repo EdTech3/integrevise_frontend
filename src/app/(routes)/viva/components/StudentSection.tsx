@@ -10,23 +10,13 @@ import StudentAvatar from './StudentAvatar';
 interface StudentSectionProps {
     transcript: string;
     isListening: boolean;
-    startListening: () => void;
-    stopListening: () => void;
     audioStream: MediaStream | null;
     error: string | undefined;
     hasStopped: boolean;
     sendStudentMessage: (transcript: string) => void;
 }
 
-const StudentSection = ({ transcript, isListening, startListening, stopListening, audioStream, error, hasStopped, sendStudentMessage }: StudentSectionProps) => {
-    const handleButtonClick = () => {
-        if (isListening) {
-            stopListening();
-        } else {
-            startListening();
-            console.log("Started Listening")
-        }
-    };
+const StudentSection = ({ transcript, isListening, audioStream, error, hasStopped, sendStudentMessage }: StudentSectionProps) => {
 
     useEffect(() => {
         if (error) {
@@ -80,13 +70,13 @@ const StudentSection = ({ transcript, isListening, startListening, stopListening
                                         sendStudentMessage(transcript);
                                     }}
                                     className={`text-primary hover:text-primary/80 transition-colors duration-500
-                                        ${hasStopped ? 'animate-in slide-in-from-left duration-300' : 'hidden'}`}
+                                        ${hasStopped && transcript && isListening ? 'animate-in slide-in-from-left duration-300' : 'hidden'}`}
                                     aria-label="Send message"
                                 >
                                     <IoSend size={24} />
                                 </button>
                             </TooltipTrigger>
-                            <TooltipContent onClick={handleButtonClick} >
+                            <TooltipContent>
                                 <p>Send message</p>
                             </TooltipContent>
                         </Tooltip>

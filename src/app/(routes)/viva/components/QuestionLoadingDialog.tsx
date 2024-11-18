@@ -1,33 +1,50 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import AIAvatar from "./AIAvatar"
 import { useEffect, useState } from "react"
 
 interface Props {
     open: boolean;
+    onStart: () => void;
+    onClose: () => void;
+    questionsLoading: boolean;
 }
 
 const loadingMessages = [
     "Analyzing your documents...",
     "Preparing personalized questions...",
     "Tailoring the assessment to your work...",
-    "Almost ready to begin...",
+    "Ready to begin...",
 ]
 
-
-const QuestionLoadingDialog = ({ open }: Props) => {
+const QuestionLoadingDialog = ({ open, onStart, onClose, questionsLoading }: Props) => {
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
+    const [isReady, setIsReady] = useState(false)
 
     useEffect(() => {
-        if (!open) return
+        if (!open) {
+            setCurrentMessageIndex(0);
+            setIsReady(false);
+            return;
+        }
 
         const messageInterval = setInterval(() => {
-            setCurrentMessageIndex((prev) => (prev + 1) % loadingMessages.length)
-        }, 4000)
+            setCurrentMessageIndex((prev) => {
+                const nextIndex = (prev + 1) % loadingMessages.length;
+                if (nextIndex === loadingMessages.length - 1) {
+                    setIsReady(true);
+                }
+                return nextIndex;
+            });
+        }, 4000);
 
-        return () => {
-            clearInterval(messageInterval)
-        }
-    }, [open])
+        return () => clearInterval(messageInterval);
+    }, [open]);
+
+    const handleStart = () => {
+        onStart();
+        onClose();
+    };
 
     return (
         <Dialog open={open}>
@@ -47,6 +64,14 @@ const QuestionLoadingDialog = ({ open }: Props) => {
                             <span className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:0.2s]" />
                             <span className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:0.4s]" />
                         </div>
+
+                        <Button
+                            onClick={handleStart}
+                            disabled={!isReady || questionsLoading}
+                            className="w-full"
+                        >
+                            Start Assessment
+                        </Button>
                     </div>
                 </div>
             </DialogContent>

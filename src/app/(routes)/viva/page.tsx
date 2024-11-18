@@ -5,28 +5,29 @@ import { useQuestions } from '@/hooks/api/useQuestions'
 import useDeepgramSTT from '@/hooks/useDeepgramSTT'
 import { useDeepgramTTS } from '@/hooks/useDeepgramTTS'
 import useApiKey from '@/hooks/useDeepgramTempAPIKey'
+import { useQuestionTimer } from '@/hooks/useQuestionTimer'
 import { useVivaSession } from '@/lib/store'
+import { successToast } from '@/lib/toast'
 import { QuestionAnswer } from '@prisma/client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import AISection from './components/AISection'
-import SimpleStudentSection from './components/SimpleStudentSection'
-import SuccessDialog from './components/SuccessDialog'
 import ProcessingDialog from './components/ProcessingDialog'
 import QuestionLoadingDialog from './components/QuestionLoadingDialog'
-import { successToast } from '@/lib/toast'
-import { useQuestionTimer } from '@/hooks/useQuestionTimer'
+import StudentSection from './components/StudentSection'
+import SuccessDialog from './components/SuccessDialog'
 
 //TODO: Add a loading state in the student section
-//TODO: Implement the timer
-//TODO: Handle transition to the next question when the answer is assessed
+
 
 const Viva = () => {
     const { apiKey } = useApiKey();
     const [shouldStartListening, setShouldStartListening] = useState(false);
+    const [showLoadingDialog, setShowLoadingDialog] = useState(true);
+    const [hasInitialInteraction, setHasInitialInteraction] = useState(false);
 
     const { isListening, transcript, startListening, stopListening, hasStopped, audioStream, error: sttError } = useDeepgramSTT(apiKey);
 
-    const { isSpeaking, isLoading, convertToSpeech, error } = useDeepgramTTS(() => {
+    const { isSpeaking, isLoading: isTTSLoading, convertToSpeech, error: ttsError } = useDeepgramTTS(() => {
         setShouldStartListening(true);
     });
 
@@ -42,6 +43,8 @@ const Viva = () => {
     const [questionDisplayTime, setQuestionDisplayTime] = useState<Date | null>(null);
     const timer = useQuestionTimer();
 
+    const [displayedText, setDisplayedText] = useState('');
+
     const moveToNextQuestion = () => {
         if (!questionsData || !questionsData.length) return;
 
@@ -56,6 +59,8 @@ const Viva = () => {
 
     const sendStudentMessage = async (transcript: string) => {
         timer.stopTimer();
+        setShouldStartListening(false);
+        stopListening();
         assess({
             vivaSessionId: vivaSessionId || "",
             question: {
@@ -75,6 +80,37 @@ const Viva = () => {
             },
         });
     }
+
+    const handleSpeak = useCallback(async () => {
+        if (!currentQuestion?.friendlyQuestion) return;
+
+        try {
+            const result = await convertToSpeech(currentQuestion.friendlyQuestion);
+            if (result) {
+                const { audio, streamDelay } = result;
+                console.log("Playing audio", audio);
+                audio.play();
+                setDisplayedText('');
+                for (let i = 0; i < currentQuestion.friendlyQuestion.length; i++) {
+                    await new Promise(resolve => setTimeout(resolve, streamDelay));
+                    setDisplayedText(prev => prev + currentQuestion.friendlyQuestion[i]);
+                }
+            }
+        } catch (err) {
+            console.error('Error speaking:', err);
+        }
+    }, [currentQuestion?.friendlyQuestion]);
+
+    const handleFirstSpeak = useCallback(() => {
+        setHasInitialInteraction(true);
+        handleSpeak();
+    }, [handleSpeak]);
+
+    useEffect(() => {
+        if (hasInitialInteraction && currentQuestion?.friendlyQuestion && currentQuestionIndex > 0) {
+            handleSpeak();
+        }
+    }, [currentQuestionIndex, currentQuestion?.friendlyQuestion, hasInitialInteraction, handleSpeak]);
 
     // Side Effects
     useEffect(() => {
@@ -110,20 +146,30 @@ const Viva = () => {
         <main className='pt-6 flex flex-col h-screen overflow-hidden'>
             <AISection
                 isSpeaking={isSpeaking}
-                isLoading={isLoading}
+                isLoading={isTTSLoading}
                 questionsLoading={isQuestionsLoading}
-                convertToSpeech={convertToSpeech}
-                error={error}
+                error={ttsError}
                 question={currentQuestion?.friendlyQuestion}
                 totalQuestions={questionsData?.length || 0}
                 currentQuestionIndex={currentQuestionIndex + 1}
                 time={timer.time}
+                displayedText={displayedText}
             />
-            <SimpleStudentSection
-                transcript={"My reason is very simple"}
+
+            <StudentSection
+                transcript={isSpeaking ? "" : transcript}
+                isListening={isListening}
+                audioStream={audioStream}
+                error={sttError?.message}
+                hasStopped={hasStopped}
                 sendStudentMessage={sendStudentMessage}
             />
-            <QuestionLoadingDialog open={isQuestionsLoading} />
+            <QuestionLoadingDialog
+                open={showLoadingDialog}
+                onStart={handleFirstSpeak}
+                onClose={() => setShowLoadingDialog(false)}
+                questionsLoading={isQuestionsLoading}
+            />
             <ProcessingDialog open={isAssessing} />
             <SuccessDialog open={isComplete} />
         </main>

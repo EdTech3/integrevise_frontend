@@ -1,11 +1,10 @@
 import QuestionTimer from '@/components/shared/QuestionTimer';
 import { errorToast } from '@/lib/toast';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AIAvatarExpression } from '../type';
 import AIAvatar from './AIAvatar';
 
 interface Props {
-    convertToSpeech: (text: string) => Promise<{ audio: HTMLAudioElement, streamDelay: number } | null>;
     error: string | null;
     isLoading: boolean;
     isSpeaking: boolean;
@@ -13,13 +12,22 @@ interface Props {
     questionsLoading: boolean;
     totalQuestions: number;
     currentQuestionIndex: number;
-    time: string
+    time: string;
+    displayedText: string;
 }
 
-const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, questionsLoading, totalQuestions, currentQuestionIndex, time }: Props) => {
-    const [displayedText, setDisplayedText] = useState('');
+const AISection = ({
+    error,
+    isLoading,
+    isSpeaking,
+    question,
+    questionsLoading,
+    totalQuestions,
+    currentQuestionIndex,
+    time,
+    displayedText
+}: Props) => {
     const [expression, setExpression] = useState<AIAvatarExpression>('neutral');
-
 
     useEffect(() => {
         if (isSpeaking) {
@@ -31,28 +39,11 @@ const AISection = ({ convertToSpeech, error, isLoading, isSpeaking, question, qu
         }
     }, [isSpeaking, isLoading]);
 
-    const handleSpeak = useCallback(async () => {
-        if (isLoading) return;
-        if (questionsLoading) return;
-        if (!question) return;
-
-        setDisplayedText('');
-        const CHAR_DELAY = 50;
-        for (let i = 0; i < question.length; i++) {
-            await new Promise(resolve => setTimeout(resolve, CHAR_DELAY));
-            setDisplayedText(prev => prev + question[i]);
-        }
-    }, [isLoading, questionsLoading, question]);
-
     useEffect(() => {
         if (error) {
             errorToast(error);
         }
     }, [error])
-
-    useEffect(() => {
-        handleSpeak();
-    }, [handleSpeak]);
 
     return (
         <section className='space-y-10 px-4 h-1/2'>
