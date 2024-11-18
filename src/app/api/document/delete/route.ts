@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
+import prisma from '@/lib/prisma';
 
 export async function DELETE(request: Request) {
   try {

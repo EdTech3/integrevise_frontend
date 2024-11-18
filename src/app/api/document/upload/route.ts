@@ -1,3 +1,4 @@
+import prisma from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
 import { checkSupportedType, resolveBlobMimeType } from '@/lib/utils/documentFormatParsing';
 import { DocumentCategory, DocumentType } from '@prisma/client';
@@ -66,8 +67,8 @@ export async function POST(request: Request) {
     const document = await prisma.document.create({
       data: {
         title,
-        category,
-        type: documentType,
+        category: category as DocumentCategory,
+        type: documentType as DocumentType,
         description,
         filePath: uniqueFileName,
         fileName: file.name,

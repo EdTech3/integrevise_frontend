@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
 import { DocumentCategory } from '@prisma/client';
 import { checkSupportedType, resolveBlobMimeType } from '@/lib/utils/documentFormatParsing';
+import prisma from '@/lib/prisma';
 
 // TODO: Optimize this route to not accept redundant fields
 

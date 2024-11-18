@@ -57,8 +57,18 @@ export async function GET(request: Request) {
     }));
 
     // Bulk insert all questions
-    const questionAnswers = await prisma.questionAnswer.createMany({
+    await prisma.questionAnswer.createMany({
       data: questionsToCreate
+    });
+
+    // Fetch the created questions
+    const questionAnswers = await prisma.questionAnswer.findMany({
+      where: {
+        vivaSessionId
+      },
+      orderBy: {
+        createdAt: 'asc'
+      }
     });
 
     return NextResponse.json(questionAnswers);

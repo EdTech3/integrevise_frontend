@@ -1,4 +1,3 @@
-import { prisma } from '../prisma'
 import { supabase } from '../supabase'
 import { splitIntoChunks } from '../utils/documentProcessing'
 import { getEmbedding } from './openAIService'
@@ -6,6 +5,7 @@ import { encode } from 'gpt-tokenizer/model/gpt-3.5-turbo'
 import { Document, DocumentType } from '@prisma/client'
 import mammoth from 'mammoth'
 import PDFParser from 'pdf2json'
+import prisma from '../prisma'
 
 async function parseBlob(blob: Blob, type: DocumentType): Promise<string> {
   console.log("Parsing blob:", blob, "Type:", type); 

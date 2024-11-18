@@ -55,7 +55,7 @@ const QuestionLoadingDialog = ({ open, onStart, onClose, questionsLoading }: Pro
                         <div className="space-y-2">
                             <h2 className="text-lg font-medium">Preparing Your Assessment</h2>
                             <p className="text-muted-foreground min-h-[1.5rem] transition-all duration-500">
-                                {loadingMessages[currentMessageIndex]}
+                                {questionsLoading ? loadingMessages[currentMessageIndex] : "Ready to begin..."}
                             </p>
                         </div>
 

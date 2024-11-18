@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       questionAnswerId: question.id,
       criteriaId: criteria?.id,
       score: assessment.score,
-      evaluation: assessment.feedback
+      evaluation: assessment.evidence
     }})
 
     console.log("Updated Criteria: -> \n", updatedCriteria)
