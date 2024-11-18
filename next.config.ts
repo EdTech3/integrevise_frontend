@@ -9,7 +9,14 @@ const nextConfig: NextConfig = {
     ]
   },
   serverComponentsExternalPackages: ['pdf2json'],
-
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        'metrouni.localhost:3001',
+        '192.168.10.117:3000'
+      ]
+    }
+  }
 };
 
 export default nextConfig;
