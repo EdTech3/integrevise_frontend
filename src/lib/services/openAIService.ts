@@ -1,6 +1,7 @@
 import { DocumentCategory } from '@prisma/client';
 import OpenAI from 'openai';
 import { encode } from 'gpt-tokenizer/model/gpt-3.5-turbo';
+import prisma from '../prisma';
 
 export const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY

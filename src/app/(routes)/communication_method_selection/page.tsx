@@ -6,13 +6,16 @@ import { GiSoundWaves } from "react-icons/gi";
 import { CommunicationMethodTypes } from '../../../type';
 import CommunicationMethod from './components/CommunicationMethod';
 import Container from '@/components/shared/Container';
+import { useVivaConfig } from '@/lib/store/vivaConfig';
 
 
 const CommunicationMethodSelection = () => {
   const router = useRouter()
+  const { setCommunicationMethod } = useVivaConfig()
 
   function handleMethodSelected(method: CommunicationMethodTypes) {
-    router.push(`/facial_recognition?method=${method}`)
+    setCommunicationMethod(method)
+    router.push(`/audio_test`)
   }
 
   return (

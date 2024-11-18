@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { truncateText } from '@/lib/utils/manipulateText'
 import { DocumentCategory } from '@prisma/client'
 import { Pencil, Trash } from 'lucide-react'
 import { BsThreeDotsVertical } from "react-icons/bs"
@@ -26,9 +27,9 @@ const DocumentCard = ({ title, description, category, updatedAt, onEdit, onDelet
 
     return (
         <Card className="w-full bg-secondary-100 text-foreground">
-            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 lg:min-h-10">
                 <div>
-                    <CardTitle className="text-xl font-semibold">{title}</CardTitle>
+                    <CardTitle className="text-xl font-semibold min-h-16">{truncateText(title)}</CardTitle>
                     <CardDescription >
                         {category && (
                             <span className="inline-block px-2 py-1 text-xs font-thin rounded-full capitalize border border-secondary-200 text-secondary-200">

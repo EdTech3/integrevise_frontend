@@ -5,10 +5,14 @@ import { useDocuments, useDeleteDocument } from '@/hooks/api/useDocuments';
 import { documentsApi } from '@/lib/services/api';
 import { errorToast } from '@/lib/toast';
 import { useState } from 'react';
-import { FaPlus } from 'react-icons/fa';
+import { FaArrowRight, FaPlus } from 'react-icons/fa';
 import DocumentCard from './components/DocumentCard';
 import NewDocumentForm, { EditDocument } from './components/NewDocumentForm';
 import { useVivaSession } from '@/lib/store';
+import { Loader2 } from 'lucide-react';
+import DocumentCardSkeleton from './components/DocumentCardSkeleton';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 
 
@@ -61,7 +65,6 @@ const VivaContext = () => {
     deleteDocument(documentId);
   };
 
-  if (isLoading) return <h1>Loading...</h1>;
   if (error) return <h1>Error: {error.message}</h1>;
   if (!vivaSessionId) return <h1>No session ID found</h1>;
 
@@ -69,15 +72,29 @@ const VivaContext = () => {
     <Container>
       <main className='py-2 min-h-screen flex flex-col space-y-4'>
         <section className='flex items-center justify-between'>
-          <h1 className='text-3xl font-semibold'>Viva Context</h1>
-          <NewDocumentForm vivaSessionId={vivaSessionId}>
-            <Button size={"icon"}>
-              <FaPlus />
-            </Button>
-          </NewDocumentForm>
+          <div className='flex items-center justify-between space-x-2'>
+            <h1 className='text-3xl font-semibold'>Viva Context</h1>
+            <NewDocumentForm vivaSessionId={vivaSessionId}>
+              <Button
+                variant={"outline"}
+                className='rounded-full'
+                size={"icon"}
+              >
+                <FaPlus />
+              </Button>
+            </NewDocumentForm>
+          </div>
+          <Button asChild>
+            <Link href="/viva">Continue to Assessment <FaArrowRight /></Link>
+          </Button>
         </section>
         <section className='grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4'>
-          {documents?.map((doc) => {
+          {isLoading &&
+            [...Array(5)].map((_, index) => (
+              <DocumentCardSkeleton key={index} />
+            ))
+          }
+          {!isLoading && documents?.map((doc) => {
             return (
               <DocumentCard
                 key={doc.id}

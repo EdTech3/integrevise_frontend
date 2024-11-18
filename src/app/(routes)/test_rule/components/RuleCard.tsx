@@ -13,7 +13,7 @@ export default function RuleCard() {
 
             <CardContent className="flex flex-col items-center">
                 <h3 className="text-foreground text-center mb-2">Some rules</h3>
-                <ul className="custom-disc-size space-y-4">
+                <ul className="custom-disc-size space-y-4 ">
                     <li>Maintain a Distraction-Free Environment</li>
                     <li>Use Approved Resources Only</li>
                     <li>Follow Identity Verification Procedures</li>

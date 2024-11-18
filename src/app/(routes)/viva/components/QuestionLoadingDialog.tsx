@@ -1,7 +1,9 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import AIAvatar from "./AIAvatar"
 import { useEffect, useState } from "react"
+import { CardContent } from "@/components/ui/card";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 
 interface Props {
     open: boolean;
@@ -14,7 +16,7 @@ const loadingMessages = [
     "Analyzing your documents...",
     "Preparing personalized questions...",
     "Tailoring the assessment to your work...",
-    "Ready to begin...",
+    "Finalizing your assessment...",
 ]
 
 const QuestionLoadingDialog = ({ open, onStart, onClose, questionsLoading }: Props) => {
@@ -48,29 +50,31 @@ const QuestionLoadingDialog = ({ open, onStart, onClose, questionsLoading }: Pro
 
     return (
         <Dialog open={open}>
-            <DialogContent className="w-11/12 sm:max-w-md" removeCloseIcon={true}>
+            <DialogContent className="w-11/12 sm:max-w-md" removeCloseIcon={true} aria-describedby={undefined}>
+                <VisuallyHidden.Root>
+                    <DialogTitle>Assessment Rules</DialogTitle>
+                </VisuallyHidden.Root>
                 <div className="flex flex-col items-center space-y-6 py-4">
                     <AIAvatar expression="thinking" size={120} />
                     <div className="space-y-6 text-center">
-                        <div className="space-y-2">
-                            <h2 className="text-lg font-medium">Preparing Your Assessment</h2>
-                            <p className="text-muted-foreground min-h-[1.5rem] transition-all duration-500">
-                                {questionsLoading ? loadingMessages[currentMessageIndex] : "Ready to begin..."}
-                            </p>
-                        </div>
+                        <p className="text-center">Hello Kelvin, You are about to take the integrevise Assesment</p>
 
-                        <div className="flex justify-center gap-2 pt-2">
-                            <span className="h-2 w-2 rounded-full bg-primary animate-bounce" />
-                            <span className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:0.2s]" />
-                            <span className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:0.4s]" />
-                        </div>
+                        <CardContent className="flex flex-col items-center">
+                            <h3 className="text-foreground text-center mb-2">Some rules</h3>
+                            <ul className="custom-disc-size space-y-4 self-start text-left mx-auto">
+                                <li>Maintain a Distraction-Free Environment</li>
+                                <li>Use Approved Resources Only</li>
+                                <li>Follow Identity Verification Procedures</li>
+                                <li>Adhere to Technical Guidelines</li>
+                            </ul>
+                        </CardContent>
 
                         <Button
                             onClick={handleStart}
                             disabled={!isReady || questionsLoading}
                             className="w-full"
                         >
-                            Start Assessment
+                            {questionsLoading ? loadingMessages[currentMessageIndex] : "Start Assessment"}
                         </Button>
                     </div>
                 </div>

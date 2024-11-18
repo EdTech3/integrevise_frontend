@@ -113,9 +113,6 @@ const Viva = () => {
     }, [currentQuestionIndex, currentQuestion?.friendlyQuestion, hasInitialInteraction, handleSpeak]);
 
     // Side Effects
-    useEffect(() => {
-        console.log("Questions:", questionsData);
-    }, [questionsData]);
 
     useEffect(() => {
         if (questionsData && questionsData.length > 0) {
@@ -142,6 +139,17 @@ const Viva = () => {
         }
     }, [currentQuestion?.id]);
 
+    if (showLoadingDialog) return (
+        <main className='pt-6 flex flex-col h-screen overflow-hidden'>
+            <QuestionLoadingDialog
+                open={showLoadingDialog}
+                onStart={handleFirstSpeak}
+                onClose={() => setShowLoadingDialog(false)}
+                questionsLoading={isQuestionsLoading}
+            />
+        </main>
+    )
+
     return (
         <main className='pt-6 flex flex-col h-screen overflow-hidden'>
             <AISection
@@ -163,12 +171,6 @@ const Viva = () => {
                 error={sttError?.message}
                 hasStopped={hasStopped}
                 sendStudentMessage={sendStudentMessage}
-            />
-            <QuestionLoadingDialog
-                open={showLoadingDialog}
-                onStart={handleFirstSpeak}
-                onClose={() => setShowLoadingDialog(false)}
-                questionsLoading={isQuestionsLoading}
             />
             <ProcessingDialog open={isAssessing} />
             <SuccessDialog open={isComplete} />

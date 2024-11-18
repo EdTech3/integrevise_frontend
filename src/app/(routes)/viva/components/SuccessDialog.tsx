@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import Confetti from 'react-confetti'
 import { useEffect, useState } from "react"
+import { DialogDescription } from "@radix-ui/react-dialog"
 
 interface Props {
     open: boolean;
@@ -45,7 +46,7 @@ const SuccessDialog = ({ open }: Props) => {
                     }}
                 />
             )}
-            <DialogContent className="sm:max-w-md" removeCloseIcon={true}>
+            <DialogContent className="sm:max-w-md" removeCloseIcon={true} aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle className="text-center text-2xl">Congratulations! 🎉</DialogTitle>
                 </DialogHeader>

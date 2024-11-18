@@ -1,5 +1,6 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import AIAvatar from "./AIAvatar"
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 
 interface Props {
     open: boolean;
@@ -8,7 +9,10 @@ interface Props {
 const ProcessingDialog = ({ open }: Props) => {
     return (
         <Dialog open={open}>
-            <DialogContent className="w-11/12 sm:max-w-md" removeCloseIcon={true}>
+            <DialogContent className="w-11/12 sm:max-w-md" removeCloseIcon={true} aria-describedby={undefined}>
+                <VisuallyHidden.Root>
+                    <DialogTitle>Processing Your Answer</DialogTitle>
+                </VisuallyHidden.Root>
                 <div className="flex flex-col items-center space-y-6 py-4 text-foreground">
                     <AIAvatar expression="thinking" size={120} />
                     <div className="space-y-2 text-center">

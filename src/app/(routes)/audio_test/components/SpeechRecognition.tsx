@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import useDeepgramSTT from '@/hooks/useDeepgramSTT';
 import React, { useState } from 'react';
-import useMediaDevices from '../../facial_recognition/hooks/useMediaDevices';
+import useMediaDevices from '../../home/hooks/useMediaDevices';
 import AudioSelector from './AudioSelector';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
@@ -69,7 +69,7 @@ const SpeechRecognition: React.FC = () => {
                     </Button>
                     <Button
                         disabled={!transcript}
-                        onClick={() => router.push("/viva")}
+                        onClick={() => router.push("/viva_context")}
                         className="text-center w-full"
                     >
                         Start Assessment
