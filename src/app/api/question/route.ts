@@ -14,7 +14,9 @@ export async function GET(request: Request) {
     }
     
     // Get viva session details
+    console.log("Getting Session Id", vivaSessionId);
     const vivaSession = await getVivaSessionWithDetails(vivaSessionId);
+
 
     // Get relevant chunks with enhanced context retrieval
     const relevantChunks = await getSimilarChunks(

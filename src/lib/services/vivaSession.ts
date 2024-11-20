@@ -2,9 +2,9 @@ import prisma from "../prisma";
 
 
 export async function getVivaSessionWithDetails(vivaSessionId: string) {
-
-  const vivaSession = await prisma.vivaSession.findUnique({
-    where: { id: vivaSessionId },
+  try {
+    const vivaSession = await prisma.vivaSession.findUnique({
+      where: { id: vivaSessionId },
     include: {
       documents: true,
       subject: true,
@@ -15,7 +15,11 @@ export async function getVivaSessionWithDetails(vivaSessionId: string) {
     throw new Error('Viva session not found');
   }
 
-  return vivaSession;
+    return vivaSession;
+  } catch (error) {
+    console.error("Error getting viva session with details", error);
+    throw error;
+  }
 } 
 
 export async function getVivaSessionWithSubjectDetails(vivaSessionId: string) {
