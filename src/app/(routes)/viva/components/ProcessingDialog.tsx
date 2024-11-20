@@ -18,7 +18,7 @@ const ProcessingDialog = ({ open }: Props) => {
                     <div className="space-y-2 text-center">
                         <h3 className="text-xl font-semibold">Processing Your Answer</h3>
                         <p className="text-muted-foreground">
-                            Please wait while I analyze your response and prepare the next question...
+                            Please wait while I analyse your response and prepare the next question...
                         </p>
                         <div className="flex justify-center gap-2 pt-2">
                             <span className="h-2 w-2 rounded-full bg-primary animate-ping" />

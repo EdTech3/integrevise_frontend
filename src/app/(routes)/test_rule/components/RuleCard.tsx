@@ -7,7 +7,7 @@ export default function RuleCard() {
         <Card className="flex flex-col items-center w-full max-w-md space-y-4">
             <CardHeader className="flex flex-col items-center">
                 <Logo />
-                <p className="text-center">Hello Kelvin, You are about to take the integrevise Assesment</p>
+                <p className="text-center">Hello Kelvin, You are about to take the integrevise Assessment</p>
             </CardHeader>
 
 

@@ -2,7 +2,7 @@ import AudioVisualizer from '@/components/shared/Audiovisualizer';
 import Logo from '@/components/shared/Logo';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { errorToast } from '@/lib/toast';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { IoSend } from "react-icons/io5";
 import { FaCircle } from "react-icons/fa";
 import StudentAvatar from './StudentAvatar';
@@ -16,7 +16,8 @@ interface StudentSectionProps {
     sendStudentMessage: (transcript: string) => void;
 }
 
-const StudentSection = ({ transcript, isListening, audioStream, error, hasStopped, sendStudentMessage }: StudentSectionProps) => {
+const StudentSection = ({ transcript, isListening, audioStream, error, sendStudentMessage }: StudentSectionProps) => {
+    const [cameraOpen, setCameraOpen] = useState(false);
 
     useEffect(() => {
         if (error) {
@@ -70,7 +71,7 @@ const StudentSection = ({ transcript, isListening, audioStream, error, hasStoppe
                                         sendStudentMessage(transcript);
                                     }}
                                     className={`text-primary hover:text-primary/80 transition-colors duration-500
-                                        ${hasStopped && transcript && isListening ? 'animate-in slide-in-from-left duration-300' : 'hidden'}`}
+                                        ${transcript && isListening ? 'animate-in slide-in-from-left duration-300' : 'hidden'}`}
                                     aria-label="Send message"
                                 >
                                     <IoSend size={24} />
@@ -83,7 +84,9 @@ const StudentSection = ({ transcript, isListening, audioStream, error, hasStoppe
 
                     </div>
 
-                    <StudentAvatar useCamera={false} />
+                    <figure onClick={() => setCameraOpen(!cameraOpen)}>
+                        <StudentAvatar useCamera={cameraOpen} />
+                    </figure>
                 </div>
             </section>
         </TooltipProvider>
