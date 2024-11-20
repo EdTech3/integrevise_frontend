@@ -19,7 +19,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       allowedOrigins: [
         'metrouni.localhost:3001',
-        '192.168.10.117:3000'
+        '192.168.10.117:3000',
+        'https://integrevise.netlify.app/'
       ]
     }
   }
