@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
 import { getSimilarChunks } from '@/lib/services/openAIService';
-import { getVivaSessionWithDetails } from '@/lib/services/vivaSession';
 import { formatChunksForContext, generateQuestions } from '@/lib/services/questionGeneration';
-import prisma from '@/lib/prisma';
+import { getVivaSessionWithDetails } from '@/lib/services/vivaSession';
+import { supabase } from '@/lib/supabase';
+import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
@@ -14,9 +14,7 @@ export async function GET(request: Request) {
     }
     
     // Get viva session details
-    console.log("Getting Session Id", vivaSessionId);
     const vivaSession = await getVivaSessionWithDetails(vivaSessionId);
-
 
     // Get relevant chunks with enhanced context retrieval
     const relevantChunks = await getSimilarChunks(
@@ -27,13 +25,20 @@ export async function GET(request: Request) {
 
     // Format context
     const formattedContext = formatChunksForContext(relevantChunks);
+// Try to get questions from the database
+const { data: existingQuestions, error } = await supabase
+  .from('QuestionAnswer')
+  .select('*')
+  .eq('vivaSessionId', vivaSessionId);
 
-    // Try to get questions from the database
-    const existingQuestions = await prisma.questionAnswer.findMany({
-      where:{
-        vivaSessionId
-      }
-    });
+if (error) {
+  throw error;
+}
+
+// If questions exist, return them
+if (existingQuestions && existingQuestions.length > 0) {
+  return NextResponse.json(existingQuestions);
+}
 
     // If questions exist, return them
     if (existingQuestions.length > 0) {
@@ -50,28 +55,39 @@ export async function GET(request: Request) {
 
     // Format questions for bulk insert
     const questionsToCreate = questions.map(question => ({
+      id: crypto.randomUUID(), // Generate UUID for id
       question: question.main,
       friendlyQuestion: question.friendlyVersion,
       answer: '', // Empty answer initially
+      score: null, // Optional score field
+      overallEvaluation: null, // Optional evaluation field
+      timestamp: new Date(),
+      questionEmbedding: null, // Optional embedding field
+      answerEmbedding: null, // Optional embedding field
       vivaSessionId,
       createdAt: new Date(),
       updatedAt: new Date()
     }));
 
     // Bulk insert all questions
-    await prisma.questionAnswer.createMany({
-      data: questionsToCreate
-    });
+    const { error: insertError } = await supabase
+      .from('QuestionAnswer')
+      .insert(questionsToCreate);
+
+    if (insertError) {
+      throw insertError;
+    }
 
     // Fetch the created questions
-    const questionAnswers = await prisma.questionAnswer.findMany({
-      where: {
-        vivaSessionId
-      },
-      orderBy: {
-        createdAt: 'asc'
-      }
-    });
+    const { data: questionAnswers, error: fetchError } = await supabase
+      .from('QuestionAnswer')
+      .select('*')
+      .eq('vivaSessionId', vivaSessionId)
+      .order('createdAt', { ascending: true });
+
+    if (fetchError) {
+      throw fetchError;
+    }
 
     return NextResponse.json(questionAnswers);
     

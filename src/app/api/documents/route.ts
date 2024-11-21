@@ -1,6 +1,5 @@
-import prisma from '@/lib/prisma';
+import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
-
 
 export async function GET(request: Request) {
   try {
@@ -11,14 +10,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Viva session ID is required' }, { status: 400 });
     }
 
-    const documents = await prisma.document.findMany({
-      where: {
-        vivaSessionId: vivaSessionId
-      },
-      orderBy: {
-        updatedAt: 'desc'
-      }
-    });
+    const { data: documents, error } = await supabase
+      .from('Document')
+      .select('*')
+      .eq('vivaSessionId', vivaSessionId)
+      .order('updatedAt', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json(documents);
   } catch (error) {
