@@ -1,10 +1,17 @@
-import prisma from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
-
 
 export async function GET() {
   try {
-    const subjects = await prisma.subject.findMany()
+    const { data: subjects, error } = await supabase
+      .from('Subject')
+      .select('*')
+      .order('name')
+
+    if (error) {
+      throw error
+    }
+
     return NextResponse.json(subjects)
   } catch (error) {
     console.error('Request error', error)
@@ -15,9 +22,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const json = await request.json()
-    const subject = await prisma.subject.create({
-      data: json,
-    })
+    
+    const { data: subject, error } = await supabase
+      .from('Subject')
+      .insert([json])
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
+
     return NextResponse.json(subject)
   } catch (error) {
     console.error('Request error', error)
