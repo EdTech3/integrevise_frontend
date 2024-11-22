@@ -24,14 +24,14 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4">
+        <nav className="h-16 bg-background border-b flex items-center justify-between px-4">
             <div className="flex items-center gap-4">
                 <h1 className="text-lg font-medium">Dashboard</h1>
             </div>
             <div className="flex items-center gap-4">
                 <SearchBar
                     placeholder="Search anything..."
-                    className="w-[320px]"
+                    className="w-[320px] hidden md:block"
                     onSearch={handleSearch}
                 />
                 <ProfileItem
