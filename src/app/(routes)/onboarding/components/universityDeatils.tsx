@@ -242,7 +242,7 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
                   type="submit"
                   className={`w-full py-2 px-4 rounded-md text-white ${
                     isDomainAvailable || isSubmitted
-                      ? "bg-blue-500 hover:bg-blue-600"
+                      ? "bg-foreground hover:bg-blue-900"
                       : "bg-gray-300 cursor-not-allowed"
                   }`}
                   disabled={!isDomainAvailable || isSubmitted}
