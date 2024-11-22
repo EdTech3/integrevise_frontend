@@ -22,7 +22,7 @@ const Stepper: React.FC<StepperProps> = ({
     onJump,
 }) => {
     return (
-        <div className="flex items-center w-full max-w-3xl mx-auto space-x-4">
+        <div className="flex items-center w-full max-w-3xl mx-auto space-x-2">
             {steps.map((step, index) => (
                 <div key={step.title} className="flex items-center w-full">
                     {/* Step */}
