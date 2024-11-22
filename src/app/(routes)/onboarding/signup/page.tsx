@@ -3,16 +3,16 @@ import React, { useState } from "react";
 import Stepper from "../components/stepper/Stepper";
 import UniversityDetails from "../components/universityDeatils";
 import SSOPage from "../components/ssoIntegration";
-import lmsIntegration from "../components/lmsIntegration";
-import roleAssignment from "../components/roleAssignment";
-import Pattern from "../components/pattern";
+import LmsIntegration from "../components/lmsIntegration";
+import RoleAssignment from "../components/roleAssignment";
 import Logo from "@/components/shared/Logo";
+import Sidebar from "../components/sideBar";
 
 const steps = [
-  { title: "Step 1", component: UniversityDetails },
-  { title: "Step 2", component: SSOPage },
-  { title: "Step 3", component: lmsIntegration },
-  { title: "Step 4", component: roleAssignment },
+  { title: "University Details", component: UniversityDetails },
+  { title: "SSO Integration", component: SSOPage },
+  { title: "LMS Integration", component: LmsIntegration },
+  { title: "Role Assignment", component: RoleAssignment },
 ];
 
 const SignupPage = () => {
@@ -26,37 +26,51 @@ const SignupPage = () => {
     setCurrentStepIndex((prevIndex) => prevIndex - 1);
   };
 
-  const handleJumpToStep = (stepIndex) => {
+  const handleJumpToStep = (stepIndex: number) => {
     setCurrentStepIndex(stepIndex);
   };
 
-  const currentStep = steps[currentStepIndex];
+  const handleFinish = () => {
+    console.log("Stepper completed");
+ 
+  };
+
+  const renderStepContent = () => {
+    const StepComponent = steps[currentStepIndex].component;
+    return (
+      <StepComponent
+        onNext={handleNextStep} 
+        onFinish={handleFinish} 
+      />
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white flex">
+      {/* Sidebar */}
       <div className="w-2/6">
-        <Pattern />
+        <Sidebar />
       </div>
+
+      {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center">
         <Logo type="welcome" className="mb-10" />
 
-       
-          <Stepper
-            steps={steps}
-            currentStepIndex={currentStepIndex}
-            onNext={handleNextStep}
-            onPrev={handlePrevStep}
-            onJump={handleJumpToStep}
-          />
+        {/* Stepper */}
+        <Stepper
+          steps={steps}
+          currentStepIndex={currentStepIndex}
+          onNext={handleNextStep}
+          onPrev={handlePrevStep}
+          onJump={handleJumpToStep}
+          onFinish={handleFinish}
+        />
 
-
-        {currentStep && (
-          <div className="mt-8 w-3/4">
-            <currentStep.component onNext={handleNextStep}  />
-          </div>
-        )}
+        {/* Current Step */}
+        <div className="mt-8 w-3/4">{renderStepContent()}</div>
       </div>
     </div>
   );
 };
+
 export default SignupPage;
