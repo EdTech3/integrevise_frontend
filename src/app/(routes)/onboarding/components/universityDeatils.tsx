@@ -90,8 +90,8 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
               );
 
               if (response.status === 201) {
-                setIsSubmitted(true); // Mark form as submitted
-                onNext(); // Proceed to the next step
+                setIsSubmitted(true);
+                onNext();
               }
             } catch (error) {
               setErrors({

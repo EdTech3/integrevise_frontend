@@ -49,7 +49,7 @@ const SignupPage = () => {
     <div className="min-h-screen bg-white flex">
       {/* Sidebar */}
       <div className="w-2/6">
-        <Sidebar />
+        <Sidebar  bgColorClass="bg-gray-100"  patternColorClass="text-gray-600" />
       </div>
 
       {/* Main Content */}
