@@ -23,9 +23,25 @@ const Viva = () => {
     const [showLoadingDialog, setShowLoadingDialog] = useState(true);
     const [hasInitialInteraction, setHasInitialInteraction] = useState(false);
 
-    const { isListening, transcript, startListening, stopListening, hasStopped, audioStream, error: sttError } = useDeepgramSTT(apiKey);
+    const {
+        isListening,
+        transcript,
+        pauseListening,
+        resumeListening,
+        updateTranscript,
+        startListening,
+        stopListening,
+        hasStopped,
+        audioStream,
+        error: sttError
+    } = useDeepgramSTT(apiKey);
 
-    const { isSpeaking, isLoading: isTTSLoading, convertToSpeech, error: ttsError } = useDeepgramTTS(() => {
+    const {
+        isSpeaking,
+        isLoading: isTTSLoading,
+        convertToSpeech,
+        error: ttsError
+    } = useDeepgramTTS(() => {
         setShouldStartListening(true);
     });
 
@@ -79,39 +95,26 @@ const Viva = () => {
         });
     }
 
-    // const handleSpeak = useCallback(async () => {
-    //     if (!currentQuestion?.friendlyQuestion) return;
-
-    //     try {
-    //         const result = await convertToSpeech(currentQuestion.friendlyQuestion);
-    //         if (result) {
-    //             const { audio, streamDelay } = result;
-    //             audio.play();
-    //             setDisplayedText('');
-    //             for (let i = 0; i < currentQuestion.friendlyQuestion.length; i++) {
-    //                 await new Promise(resolve => setTimeout(resolve, streamDelay));
-    //                 setDisplayedText(prev => prev + currentQuestion.friendlyQuestion[i]);
-    //             }
-    //         }
-    //     } catch (err) {
-    //         console.error('Error speaking:', err);
-    //     }
-    // }, [currentQuestion?.friendlyQuestion]);
-
     const handleSpeak = useCallback(async () => {
         if (!currentQuestion?.friendlyQuestion) return;
 
         try {
-            setDisplayedText('');
-            for (let i = 0; i < currentQuestion.friendlyQuestion.length; i++) {
-                await new Promise(resolve => setTimeout(resolve, 200));
-                setDisplayedText(prev => prev + currentQuestion.friendlyQuestion[i]);
+            const result = await convertToSpeech(currentQuestion.friendlyQuestion);
+            if (result) {
+                const { audio, streamDelay } = result;
+                audio.play();
+                setDisplayedText('');
+                for (let i = 0; i < currentQuestion.friendlyQuestion.length; i++) {
+                    await new Promise(resolve => setTimeout(resolve, streamDelay));
+                    setDisplayedText(prev => prev + currentQuestion.friendlyQuestion[i]);
+                }
             }
-
         } catch (err) {
             console.error('Error speaking:', err);
         }
     }, [currentQuestion?.friendlyQuestion]);
+
+
 
     const handleFirstSpeak = useCallback(() => {
         setHasInitialInteraction(true);
@@ -134,7 +137,7 @@ const Viva = () => {
 
     useEffect(() => {
         if (shouldStartListening && apiKey && !isListening) {
-            // startListening();
+            startListening();
             setShouldStartListening(false);
         }
     }, [shouldStartListening, apiKey, isListening, startListening]);
@@ -176,22 +179,16 @@ const Viva = () => {
                 displayedText={displayedText}
             />
 
-            {/* <StudentSection
-                transcript={isSpeaking ? "" : transcript}
+            <StudentSection
+                transcript={transcript}
                 isListening={isListening}
                 audioStream={audioStream}
                 error={sttError?.message}
                 hasStopped={hasStopped}
                 sendStudentMessage={sendStudentMessage}
-            /> */}
-            <StudentSection
-                transcript={"At the dawn of civilization, humanity has always strived to innovate and explore the unknown. From crafting the first tools to venturing into space, our relentless pursuit of knowledge has been the cornerstone of progress. The invention of the wheel revolutionized transportation, while the discovery of electricity transformed every facet of daily life. In today's digital age, technology continues to evolve at an exponential rate, connecting people across the globe and enabling unprecedented access to information. This rapid technological advancement poses both exciting opportunities and significant challenges, as society must grapple with issues such as data privacy, ethical AI, and the digital divide. Nevertheless, the human spirit of curiosity and resilience persists, driving us toward a future filled with endless possibilities and advancements that could reshape our understanding of the universe."}
-
-                isListening={false}
-                audioStream={audioStream}
-                error={sttError?.message}
-                hasStopped={hasStopped}
-                sendStudentMessage={sendStudentMessage}
+                updateTranscript={updateTranscript}
+                pauseListening={pauseListening}
+                resumeListening={resumeListening}
             />
             <ProcessingDialog open={isAssessing} />
             <SuccessDialog open={isComplete} />

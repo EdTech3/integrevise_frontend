@@ -119,6 +119,8 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
   const streamRef = useRef<MediaStream | null>(null);
   const [lastSpeechEnd, setLastSpeechEnd] = useState<number | null>(null);
   const [hasStopped, setHasStopped] = useState(false);
+  const KEEP_ALIVE_INTERVAL = 5000;
+
 
   const { liveClientRef, initDeepgram } = useDeepgramLiveClient(
     apiKey,
@@ -179,6 +181,33 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
     }
   }, [apiKey, deviceId, initDeepgram, startRecording]);
 
+  const pauseListening = useCallback(() => {
+    if (!isListening || hasStopped || !mediaRecorder) return;
+
+      mediaRecorder.pause();
+      setIsListening(false)
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          track.enabled = false;
+        });
+      }
+
+  }, [])
+
+  const resumeListening = useCallback(() => {
+    if (!isListening || hasStopped || !mediaRecorder) return;
+
+    mediaRecorder.resume();
+    setIsListening(true)
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.enabled = true;
+      });
+    }
+  }, [])
+
   const stopListening = useCallback(() => {
     stopRecording();
     liveClientRef.current?.requestClose();
@@ -186,6 +215,42 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
     setIsListening(false);
     streamRef.current = null;
   }, [stopRecording, liveClientRef]);
+
+  const updateTranscript = useCallback((newTranscript: string) => {
+    setTranscript(newTranscript);
+  }, []);
+  
+
+  // Keep connection alive
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | undefined;
+  
+    const startKeepAlive = () => {
+      intervalId = setInterval(() => {
+        liveClientRef.current?.keepAlive();
+      }, KEEP_ALIVE_INTERVAL);
+    };
+  
+    const stopKeepAlive = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = undefined;
+      }
+    };
+  
+    if (mediaRecorder) { 
+      mediaRecorder.addEventListener('pause', startKeepAlive);
+      mediaRecorder.addEventListener('resume', stopKeepAlive);
+    }
+  
+    return () => {
+      if (mediaRecorder) {
+        mediaRecorder.removeEventListener('pause', startKeepAlive);
+        mediaRecorder.removeEventListener('resume', stopKeepAlive);
+      }
+      stopKeepAlive();
+    };
+  }, [mediaRecorder]);
 
   useEffect(() => {
     return () => {
@@ -204,6 +269,9 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
     audioStream: streamRef.current,
     lastSpeechEnd,
     hasStopped,
+    updateTranscript,
+    pauseListening,
+    resumeListening
   };
 };
 

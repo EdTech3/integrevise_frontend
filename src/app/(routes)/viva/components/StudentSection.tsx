@@ -12,12 +12,16 @@ interface StudentSectionProps {
     error: string | undefined;
     hasStopped: boolean;
     sendStudentMessage: (transcript: string) => void;
+    updateTranscript: (newTranscript: string) => void
+    pauseListening: () => void
+    resumeListening: () => void
 }
 
-const StudentSection = ({ transcript, isListening, audioStream, error, hasStopped, sendStudentMessage }: StudentSectionProps) => {
+const StudentSection = ({ transcript, isListening, audioStream, error, hasStopped, sendStudentMessage, updateTranscript, pauseListening, resumeListening }: StudentSectionProps) => {
     const [cameraOpen, setCameraOpen] = useState(false);
-    // const activateIcon = Boolean(transcript && isListening && hasStopped);
-    const activateIcon = true
+    const [isEditing, setIsEditing] = useState(false);
+    const activateIcon = Boolean(transcript && isListening && hasStopped && !isEditing);
+
 
     useEffect(() => {
         if (error) {
@@ -29,20 +33,16 @@ const StudentSection = ({ transcript, isListening, audioStream, error, hasStoppe
         <TooltipProvider>
             <section className="w-full bg-secondary-100 text-foreground space-y-2 p-4 h-1/2 rounded-tr-3xl rounded-tl-3xl flex flex-col">
 
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <div className={` transition-opacity ${activateIcon ? "opacity-100" : "opacity-0 pointer-events-none"} min-w-10 min-h-10 rounded-full lg:shadow-sm self-end cursor-pointer flex justify-center items-center`}>
-                            <Pen size={20} className="text-primary" />
-                        </div>
-                    </TooltipTrigger>
-                    <TooltipContent className='bg-secondary-100 text-primary'>
-                        <p >Edit text</p>
-                    </TooltipContent>
-                </Tooltip>
 
                 <TranscriptDisplay
                     transcript={transcript}
                     isListening={isListening}
+                    isEditing={isEditing}
+                    setIsEditing={setIsEditing}
+                    onTranscriptEdit={updateTranscript}
+                    onEditStart={pauseListening}
+                    onEditEnd={resumeListening}
+                    activateIcon={activateIcon}
                 />
 
                 <VivaControls
