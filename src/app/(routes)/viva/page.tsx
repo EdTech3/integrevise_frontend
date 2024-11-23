@@ -16,8 +16,6 @@ import QuestionLoadingDialog from './components/QuestionLoadingDialog'
 import StudentSection from './components/StudentSection'
 import SuccessDialog from './components/SuccessDialog'
 
-//TODO: Add a loading state in the student section
-
 
 const Viva = () => {
     const { apiKey } = useApiKey();
@@ -81,21 +79,35 @@ const Viva = () => {
         });
     }
 
+    // const handleSpeak = useCallback(async () => {
+    //     if (!currentQuestion?.friendlyQuestion) return;
+
+    //     try {
+    //         const result = await convertToSpeech(currentQuestion.friendlyQuestion);
+    //         if (result) {
+    //             const { audio, streamDelay } = result;
+    //             audio.play();
+    //             setDisplayedText('');
+    //             for (let i = 0; i < currentQuestion.friendlyQuestion.length; i++) {
+    //                 await new Promise(resolve => setTimeout(resolve, streamDelay));
+    //                 setDisplayedText(prev => prev + currentQuestion.friendlyQuestion[i]);
+    //             }
+    //         }
+    //     } catch (err) {
+    //         console.error('Error speaking:', err);
+    //     }
+    // }, [currentQuestion?.friendlyQuestion]);
+
     const handleSpeak = useCallback(async () => {
         if (!currentQuestion?.friendlyQuestion) return;
 
         try {
-            const result = await convertToSpeech(currentQuestion.friendlyQuestion);
-            if (result) {
-                const { audio, streamDelay } = result;
-                console.log("Playing audio", audio);
-                audio.play();
-                setDisplayedText('');
-                for (let i = 0; i < currentQuestion.friendlyQuestion.length; i++) {
-                    await new Promise(resolve => setTimeout(resolve, streamDelay));
-                    setDisplayedText(prev => prev + currentQuestion.friendlyQuestion[i]);
-                }
+            setDisplayedText('');
+            for (let i = 0; i < currentQuestion.friendlyQuestion.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                setDisplayedText(prev => prev + currentQuestion.friendlyQuestion[i]);
             }
+
         } catch (err) {
             console.error('Error speaking:', err);
         }
@@ -106,13 +118,13 @@ const Viva = () => {
         handleSpeak();
     }, [handleSpeak]);
 
+
+    // Side Effects
     useEffect(() => {
         if (hasInitialInteraction && currentQuestion?.friendlyQuestion && currentQuestionIndex > 0) {
             handleSpeak();
         }
     }, [currentQuestionIndex, currentQuestion?.friendlyQuestion, hasInitialInteraction, handleSpeak]);
-
-    // Side Effects
 
     useEffect(() => {
         if (questionsData && questionsData.length > 0) {
@@ -122,7 +134,7 @@ const Viva = () => {
 
     useEffect(() => {
         if (shouldStartListening && apiKey && !isListening) {
-            startListening();
+            // startListening();
             setShouldStartListening(false);
         }
     }, [shouldStartListening, apiKey, isListening, startListening]);
@@ -164,9 +176,18 @@ const Viva = () => {
                 displayedText={displayedText}
             />
 
-            <StudentSection
+            {/* <StudentSection
                 transcript={isSpeaking ? "" : transcript}
                 isListening={isListening}
+                audioStream={audioStream}
+                error={sttError?.message}
+                hasStopped={hasStopped}
+                sendStudentMessage={sendStudentMessage}
+            /> */}
+            <StudentSection
+                transcript={"At the dawn of civilization, humanity has always strived to innovate and explore the unknown. From crafting the first tools to venturing into space, our relentless pursuit of knowledge has been the cornerstone of progress. The invention of the wheel revolutionized transportation, while the discovery of electricity transformed every facet of daily life. In today's digital age, technology continues to evolve at an exponential rate, connecting people across the globe and enabling unprecedented access to information. This rapid technological advancement poses both exciting opportunities and significant challenges, as society must grapple with issues such as data privacy, ethical AI, and the digital divide. Nevertheless, the human spirit of curiosity and resilience persists, driving us toward a future filled with endless possibilities and advancements that could reshape our understanding of the universe."}
+
+                isListening={false}
                 audioStream={audioStream}
                 error={sttError?.message}
                 hasStopped={hasStopped}

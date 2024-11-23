@@ -27,7 +27,7 @@ const useDeepgramLiveClient = (
         measurements: true,
         profanity_filter: false,
         interim_results: true,
-        utterance_end_ms: 5000,
+        utterance_end_ms: 3000,
         keywords: ['integrevise']
       });
   
