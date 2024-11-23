@@ -1,4 +1,5 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { removeSpaces } from "@/lib/utils/manipulateText";
 import { Check, Pen } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -16,7 +17,6 @@ interface TranscriptDisplayProps {
 const TranscriptDisplay = ({ transcript, isListening, isEditing, activateIcon, onEditStart, onEditEnd, onTranscriptEdit, setIsEditing }: TranscriptDisplayProps) => {
     const [editedTranscript, setEditedTranscript] = useState(transcript);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
 
     useEffect(() => {
         if (!isEditing) {
@@ -74,15 +74,16 @@ const TranscriptDisplay = ({ transcript, isListening, isEditing, activateIcon, o
             <div className='flex-grow h-[300px] overflow-scroll'>
                 {transcript && !isEditing && (
                     <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight w-full">
-                        {editedTranscript}
+                        {transcript}
                     </p>
                 )}
 
                 {transcript && isEditing && (
                     <textarea
                         ref={textareaRef}
+                        wrap="soft"
                         className="w-full h-full text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight resize-none focus:outline-none focus:ring-2 focus:ring-primary p-2 bg-transparent border-2 border-gray-500 rounded-md"
-                        value={editedTranscript}
+                        value={removeSpaces(editedTranscript)}
                         onChange={(e) => setEditedTranscript(e.target.value)}
                         onBlur={handleEditEnd}
                         autoFocus
@@ -91,7 +92,7 @@ const TranscriptDisplay = ({ transcript, isListening, isEditing, activateIcon, o
 
                 {!transcript && !isListening && (
                     <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight">
-                        Your transcribed text will appears here
+                        Your transcribed text will appear here
                     </p>
                 )}
 

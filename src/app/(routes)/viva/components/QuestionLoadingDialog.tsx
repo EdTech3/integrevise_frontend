@@ -65,7 +65,7 @@ const QuestionLoadingDialog = ({ open, onStart, onClose, questionsLoading }: Pro
                                 <li>Maintain a Distraction-Free Environment</li>
                                 <li>Ensure good lighting</li>
 
-                                <li>{"Don't"} worry about the perfect verbal response because you can edit your response</li>
+                                <li>{"Don't"} worry about a perfect verbal response because you can edit your response</li>
                             </ul>
                         </CardContent>
 
