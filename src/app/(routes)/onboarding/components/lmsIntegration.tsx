@@ -2,7 +2,7 @@
 
 import { Field, Form, Formik } from "formik";
 import * as Yup from "yup";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectTrigger,
@@ -10,21 +10,27 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { axiosInstance } from "@/lib/axios";
+import { urlConfig } from "@/lib/utils/urls";
+import { API_ROUTES } from "@/lib/config/api";
 
 interface LMSProps {
-  onNext: () => void; 
+  onNext: () => void;
 }
 
-const lmsOptions = [
-  { label: "Moodle", value: "moodle" },
-  { label: "Blackboard", value: "blackboard" },
-  { label: "Canvas", value: "canvas" },
-];
+interface LmsOption {
+  lms_id: any;
+  label: string;
+  value: string;
+}
 
-const lmsFields: Record<string, { name: string; label: string; type: string }[]> = {
+const lmsFields: Record<
+  string,
+  { name: string; label: string; type: string }[]
+> = {
   moodle: [
-    { name: "siteUrl", label: "Moodle Site URL", type: "text" },
-    { name: "serviceToken", label: "Web Service Token", type: "text" },
+    { name: "api_base_url", label: "Moodle Site URL", type: "text" },
+    { name: "access_token", label: "Web Service Token", type: "text" },
   ],
   blackboard: [
     { name: "siteUrl", label: "Blackboard Site URL", type: "text" },
@@ -38,23 +44,75 @@ const lmsFields: Record<string, { name: string; label: string; type: string }[]>
 };
 
 const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
+  const [lmsOptions, setLmsOptions] = useState<LmsOption[]>([]);
   const [selectedLMS, setSelectedLMS] = useState<string>("moodle");
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
+  // Fetch LMS options from backend
+  useEffect(() => {
+    const fetchLmsOptions = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `${urlConfig.metroUni}${API_ROUTES.onboarding.lmsPlatforms}`
+        );
+
+        const options: LmsOption[] = response.data.map((option: any) => ({
+          label: option.lms_name,
+          value: option.lms_name.toLowerCase(),
+          lms_id: option.lms_id,
+        }));
+
+        setLmsOptions(options);
+
+        // Default to the first option if available
+        if (options.length > 0) {
+          setSelectedLMS(options[0].value);
+        }
+      } catch (error) {
+        console.error("Failed to fetch LMS options", error);
+      }
+    };
+
+    fetchLmsOptions();
+  }, []);
+
   const validationSchema = Yup.object(
-    lmsFields[selectedLMS].reduce((acc, field) => {
+    lmsFields[selectedLMS]?.reduce((acc, field) => {
       acc[field.name] = Yup.string().required(`${field.label} is required`);
       return acc;
-    }, {} as Record<string, Yup.StringSchema>)
+    }, {} as Record<string, Yup.StringSchema>) || {}
   );
 
   const handleSync = async (values: Record<string, string>) => {
-
     try {
-      console.log("Testing with values:", values);
-      setSyncStatus("Test Successful");
-    } catch (error) {
-      setSyncStatus("Test Failed");
+      const selectedLmsOption = lmsOptions.find(
+        (option) => option.value === selectedLMS
+      );
+
+      if (!selectedLmsOption) {
+        setSyncStatus("Failed: Invalid LMS selection");
+        return;
+      }
+
+      const payload = {
+        ...values,
+        lms_id: selectedLmsOption.lms_id,
+      };
+
+      console.log("Testing connection with payload:", payload);
+
+      const response = await axiosInstance.post(
+        `${urlConfig.metroUni}${API_ROUTES.onboarding.testLmsConnection}`,
+        payload
+      );
+
+      // Handle the response
+      setSyncStatus(response.data.message || "Test Successful");
+    } catch (error: any) {
+      console.error("Test connection failed:", error);
+      setSyncStatus(
+        error.response?.data?.message || "Test Failed: Unable to connect to LMS"
+      );
     }
   };
 
@@ -68,23 +126,20 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
           Enter your LMS API credentials to sync courses and assignments.
         </p>
         <Formik
-          initialValues={lmsFields[selectedLMS].reduce(
-            (acc, field) => {
-              acc[field.name] = "";
-              return acc;
-            },
-            {} as Record<string, string>
-          )}
+          initialValues={lmsFields[selectedLMS]?.reduce((acc, field) => {
+            acc[field.name] = "";
+            return acc;
+          }, {} as Record<string, string>)}
           validationSchema={validationSchema}
           onSubmit={(values, { setSubmitting }) => {
             setSubmitting(true);
-            onNext(); 
+            onNext();
             setSubmitting(false);
           }}
           enableReinitialize
         >
           {({ values, errors, touched, setFieldValue, isSubmitting }) => {
-            const allFieldsFilled = lmsFields[selectedLMS].every(
+            const allFieldsFilled = lmsFields[selectedLMS]?.every(
               (field) => values[field.name].trim() !== ""
             );
 
@@ -113,7 +168,7 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
                 </div>
 
                 {/* Dynamic Fields */}
-                {lmsFields[selectedLMS].map((field) => (
+                {lmsFields[selectedLMS]?.map((field) => (
                   <div key={field.name} className="mb-4">
                     <label
                       htmlFor={field.name}
@@ -153,7 +208,7 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
                   {syncStatus && (
                     <p
                       className={`text-sm ${
-                        syncStatus.includes("Successful")
+                        syncStatus.toLowerCase().includes("successful")
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
@@ -168,12 +223,12 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
                   <button
                     type="submit"
                     className={`w-full py-2 px-4 rounded-md text-white ${
-                      syncStatus?.includes("Successful")
+                      syncStatus?.includes("successful")
                         ? "bg-foreground hover:bg-blue-900"
                         : "bg-gray-300 cursor-not-allowed"
                     }`}
                     disabled={
-                      !syncStatus?.includes("Successful") || isSubmitting
+                      !syncStatus?.includes("successful") || isSubmitting
                     }
                   >
                     {isSubmitting ? "Submitting..." : "Continue"}

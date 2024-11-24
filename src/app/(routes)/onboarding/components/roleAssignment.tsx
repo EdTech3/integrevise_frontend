@@ -8,30 +8,50 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { axiosInstance } from "@/lib/axios";
+import { urlConfig } from "@/lib/utils/urls";
+import { API_ROUTES } from "@/lib/config/api";
+
 
 interface RoleAssignmentProps {
-  onFinish: () => void; // Callback for finishing the step
+  onFinish: () => void;
+}
+
+interface AppRole {
+  id: number;
+  name: string;
 }
 
 const RoleAssignment: React.FC<RoleAssignmentProps> = ({ onFinish }) => {
-  const [lmsRoles, setLmsRoles] = useState<string[]>([]);
-  const [integreviseRoles, setIntegreviseRoles] = useState<string[]>([]);
-  const [roleMapping, setRoleMapping] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState<boolean>(true); 
+  const [lmsRoles, setLmsRoles] = useState<string[]>([]); 
+  const [integreviseRoles, setIntegreviseRoles] = useState<AppRole[]>([]); 
+  const [roleMapping, setRoleMapping] = useState<Record<string, number>>({}); 
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-
     const fetchRoles = async () => {
       setLoading(true);
       try {
- 
-        const mockLmsRoles = ["Admin", "Team Member", "Manager", "Student", "Non-Editing Teacher", "Teacher"];
-        const mockIntegreviseRoles = ["Admin", "Team Member", "Normal", "Viewer"];
+    
+        const appResponse = await axiosInstance.get(
+          `${urlConfig.metroUni}${API_ROUTES.onboarding.appRoles}`
+        );
+        const fetchedAppRoles: AppRole[] = appResponse.data;
 
-        setLmsRoles(mockLmsRoles);
-        setIntegreviseRoles(mockIntegreviseRoles);
+        setIntegreviseRoles(
+          Array.isArray(fetchedAppRoles) ? fetchedAppRoles : []
+        );
+        const fetchedLmsRoles = [
+          "admin",
+          "instructor",
+          "student",
+          "teacher",
+          "manager",
+        ];
+        setLmsRoles(fetchedLmsRoles);
       } catch (error) {
         console.error("Failed to fetch roles", error);
+        setIntegreviseRoles([]); 
       } finally {
         setLoading(false);
       }
@@ -40,14 +60,21 @@ const RoleAssignment: React.FC<RoleAssignmentProps> = ({ onFinish }) => {
     fetchRoles();
   }, []);
 
-  const handleMappingChange = (lmsRole: string, integreviseRole: string) => {
+  const handleMappingChange = (lmsRole: string, integreviseRoleId: number) => {
     setRoleMapping((prevMapping) => ({
       ...prevMapping,
-      [lmsRole]: integreviseRole,
+      [lmsRole]: integreviseRoleId,
     }));
   };
 
-  const allRolesMapped = lmsRoles.every((role) => roleMapping[role]);
+  const handleFinish = () => {
+    console.log("Role Mappings:", roleMapping);
+    onFinish();
+  };
+
+  const allRolesMapped = lmsRoles.every(
+    (role) => roleMapping[role] !== undefined
+  );
 
   if (loading) {
     return (
@@ -64,12 +91,14 @@ const RoleAssignment: React.FC<RoleAssignmentProps> = ({ onFinish }) => {
           Role Assignment
         </h2>
         <p className="text-center text-sm text-gray-600 mb-6">
-          Match the LMS roles to the closest APP role.
+          Match the LMS roles to the closest App role.
         </p>
         <div className="grid grid-cols-2 gap-4">
           {/* LMS Roles */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">LMS Roles</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              LMS Roles
+            </h3>
             <div className="space-y-2">
               {lmsRoles.map((role, index) => (
                 <div
@@ -82,7 +111,7 @@ const RoleAssignment: React.FC<RoleAssignmentProps> = ({ onFinish }) => {
             </div>
           </div>
 
-          {/* Integrevise Roles */}
+          {/* App Roles */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">
               Integrevise Role (App Roles)
@@ -91,16 +120,20 @@ const RoleAssignment: React.FC<RoleAssignmentProps> = ({ onFinish }) => {
               {lmsRoles.map((role, index) => (
                 <div key={index}>
                   <Select
-                    value={roleMapping[role] || ""}
-                    onValueChange={(value) => handleMappingChange(role, value)}
+                    value={
+                      roleMapping[role] ? roleMapping[role].toString() : ""
+                    }
+                    onValueChange={(value) =>
+                      handleMappingChange(role, parseInt(value))
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent>
-                      {integreviseRoles.map((integreviseRole, idx) => (
-                        <SelectItem key={idx} value={integreviseRole}>
-                          {integreviseRole}
+                      {integreviseRoles.map(({ id, name }) => (
+                        <SelectItem key={id} value={id.toString()}>
+                          {name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -115,7 +148,7 @@ const RoleAssignment: React.FC<RoleAssignmentProps> = ({ onFinish }) => {
         <div className="mt-6">
           <button
             type="button"
-            onClick={onFinish}
+            onClick={handleFinish}
             className={`w-full py-2 px-4 rounded-md text-white ${
               allRolesMapped
                 ? "bg-foreground hover:bg-blue-900"

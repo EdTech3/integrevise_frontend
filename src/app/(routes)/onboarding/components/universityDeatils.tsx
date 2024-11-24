@@ -13,6 +13,7 @@ import {
 import debounce from "lodash.debounce";
 import { axiosInstance } from "@/lib/axios";
 import { urlConfig } from "@/lib/utils/urls";
+import { API_ROUTES } from "@/lib/config/api";
 
 interface UniversityDetailsProps {
   onNext: () => void;
@@ -45,7 +46,7 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
       try {
         setCheckingDomain(true);
         const response = await axiosInstance.post(
-          `${urlConfig.apiUrl}/universities/check-domain/${domain}`
+          `${urlConfig.apiUrl}${API_ROUTES.onboarding.checkDomain}/${domain}`
         );
         setIsDomainAvailable(!response.data.exists);
       } catch (error) {
@@ -82,7 +83,7 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
           onSubmit={async (values, { setSubmitting, setErrors }) => {
             try {
               const response = await axiosInstance.post(
-                `${urlConfig.apiUrl}/universities`,
+                `${urlConfig.apiUrl}/${API_ROUTES.onboarding.createUniversity}`,
                 {
                   university_name: values.universityName,
                   domain: values.subdomain,
@@ -128,7 +129,7 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
                       checkDomainAvailability(suggestedSubdomain);
                     }
                   }}
-                  disabled={isSubmitted} // Disable Select after submission
+                  disabled={isSubmitted} 
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select your university" />
