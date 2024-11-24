@@ -32,42 +32,43 @@ const SignupPage = () => {
 
   const handleFinish = () => {
     console.log("Stepper completed");
- 
   };
 
   const renderStepContent = () => {
     const StepComponent = steps[currentStepIndex].component;
     return (
       <StepComponent
-        onNext={handleNextStep} 
-        onFinish={handleFinish} 
+        onNext={handleNextStep}
+        onFinish={handleFinish}
       />
     );
   };
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row">
       {/* Sidebar */}
-      <div className="w-2/6">
-        <Sidebar  bgColorClass="bg-gray-100"  patternColorClass="text-gray-600" />
+      <div className="hidden lg:block lg:w-2/6">
+        <Sidebar bgColorClass="bg-gray-500" patternColorClass="text-white" />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 lg:p-0">
         <Logo type="welcome" className="mb-10" />
 
         {/* Stepper */}
-        <Stepper
-          steps={steps}
-          currentStepIndex={currentStepIndex}
-          onNext={handleNextStep}
-          onPrev={handlePrevStep}
-          onJump={handleJumpToStep}
-          onFinish={handleFinish}
-        />
+        <div className="w-full">
+          <Stepper
+            steps={steps}
+            currentStepIndex={currentStepIndex}
+            onNext={handleNextStep}
+            onPrev={handlePrevStep}
+            onJump={handleJumpToStep}
+            onFinish={handleFinish}
+          />
+        </div>
 
         {/* Current Step */}
-        <div className="mt-8 w-3/4">{renderStepContent()}</div>
+        <div className="mt-8 w-full lg:4/6">{renderStepContent()}</div>
       </div>
     </div>
   );

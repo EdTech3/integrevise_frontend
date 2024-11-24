@@ -52,9 +52,9 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
 
     try {
       console.log("Testing with values:", values);
-      setSyncStatus("Test Connection was successful");
+      setSyncStatus("Test Successful");
     } catch (error) {
-      setSyncStatus("Sync failed. Please check your credentials.");
+      setSyncStatus("Test Failed");
     }
   };
 
@@ -153,7 +153,7 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
                   {syncStatus && (
                     <p
                       className={`text-sm ${
-                        syncStatus.includes("successful")
+                        syncStatus.includes("Successful")
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
@@ -168,12 +168,12 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
                   <button
                     type="submit"
                     className={`w-full py-2 px-4 rounded-md text-white ${
-                      syncStatus?.includes("successful")
+                      syncStatus?.includes("Successful")
                         ? "bg-foreground hover:bg-blue-900"
                         : "bg-gray-300 cursor-not-allowed"
                     }`}
                     disabled={
-                      !syncStatus?.includes("successful") || isSubmitting
+                      !syncStatus?.includes("Successful") || isSubmitting
                     }
                   >
                     {isSubmitting ? "Submitting..." : "Continue"}

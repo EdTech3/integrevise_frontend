@@ -9,23 +9,22 @@ import Sidebar from "../onboarding/components/sideBar";
 import { urlConfig } from "@/lib/utils/urls";
 import { successToast } from "@/lib/toast";
 
-
 const ForgotPasswordPage = () => {
   const validationSchema = Yup.object({
     email: Yup.string().email("Invalid email address").required("Required"),
   });
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Sidebar */}
-      <div className="w-2/6">
+      <div className="hidden lg:block lg:w-2/6">
         <Sidebar bgColorClass="bg-blue-900" patternColorClass="text-blue-300" />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
-        <Logo type="signin" className="mb-10" />
-        <div className="w-4/6 bg-white shadow-md rounded-lg p-6">
+      <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-4 lg:p-0">
+        <Logo type="dark" className="mb-10" />
+        <div className="w-full lg:w-4/6 bg-white shadow-md rounded-lg p-6">
           <h2 className="text-2xl font-semibold mb-4 text-center text-blue-800">
             Forgot Password
           </h2>
@@ -35,14 +34,13 @@ const ForgotPasswordPage = () => {
             onSubmit={async (values, { setSubmitting, resetForm }) => {
               try {
                 const response = await axiosInstance.post(
-                    `${urlConfig.metroUni}/auth/password-reset/request`,
-                    values
-                  );
-                  successToast(response.data.message);
-                resetForm(); 
+                  `${urlConfig.metroUni}/auth/password-reset/request`,
+                  values
+                );
+                successToast(response.data.message);
+                resetForm();
               } catch (error) {
                 console.error("Error sending reset link:", error);
-       
               } finally {
                 setSubmitting(false);
               }
