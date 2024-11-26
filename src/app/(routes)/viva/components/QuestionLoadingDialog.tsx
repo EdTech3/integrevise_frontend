@@ -57,7 +57,7 @@ const QuestionLoadingDialog = ({ open, onStart, onClose, questionsLoading }: Pro
                 <div className="flex flex-col items-center space-y-6 py-4">
                     <AIAvatar expression="thinking" size={120} />
                     <div className="space-y-6 text-center">
-                        <p className="text-center">Hello Kelvin, You are about to take the integrevise Assessment</p>
+                        <p className="text-center">Hello Kyle, You are about to take the integrevise Assessment</p>
 
                         <CardContent className="flex flex-col items-center">
                             <h3 className="text-foreground text-center mb-2">Some Tips & Advice</h3>

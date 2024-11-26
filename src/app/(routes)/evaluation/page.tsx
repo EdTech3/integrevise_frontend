@@ -8,7 +8,7 @@ const EvaluationPage = () => {
         <main className='py-12'>
             <Container className='space-y-16'>
                 <StudentInfoCard
-                    name='Kelvin Snow'
+                    name='Kyle Snow'
                     image='/test_image/face2.jpeg'
                     number='1234567890'
                     vivaStatus='Pass'
