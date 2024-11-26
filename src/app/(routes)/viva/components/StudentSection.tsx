@@ -1,11 +1,8 @@
-import AudioVisualizer from '@/components/shared/Audiovisualizer';
-import Logo from '@/components/shared/Logo';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { errorToast } from '@/lib/toast';
 import { useEffect, useState } from 'react';
-import { IoSend } from "react-icons/io5";
-import { FaCircle } from "react-icons/fa";
-import StudentAvatar from './StudentAvatar';
+import TranscriptDisplay from './TranscriptDisplay';
+import VivaControls from './VivaControls';
 
 interface StudentSectionProps {
     transcript: string;
@@ -13,11 +10,18 @@ interface StudentSectionProps {
     audioStream: MediaStream | null;
     error: string | undefined;
     hasStopped: boolean;
+    isSpeaking: boolean;
     sendStudentMessage: (transcript: string) => void;
+    updateTranscript: (newTranscript: string) => void
+    pauseListening: () => void
+    resumeListening: () => void
 }
 
-const StudentSection = ({ transcript, isListening, audioStream, error, sendStudentMessage }: StudentSectionProps) => {
+const StudentSection = ({ transcript, isListening, audioStream, error, hasStopped, isSpeaking, sendStudentMessage, updateTranscript, pauseListening, resumeListening }: StudentSectionProps) => {
     const [cameraOpen, setCameraOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const activateIcon = Boolean(transcript && isListening && hasStopped && !isEditing);
+
 
     useEffect(() => {
         if (error) {
@@ -28,66 +32,29 @@ const StudentSection = ({ transcript, isListening, audioStream, error, sendStude
     return (
         <TooltipProvider>
             <section className="w-full bg-secondary-100 text-foreground space-y-2 p-4 h-1/2 rounded-tr-3xl rounded-tl-3xl flex flex-col">
-                <div className='flex-grow h-[300px] overflow-scroll'>
-                    {transcript &&
-                        <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight  w-full">
-                            {transcript}
-                        </p>
-                    }
-
-                    {!transcript && !isListening &&
-                        <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight">
-                            Your transcribed text will appears here
-                        </p>
-                    }
-
-                    {!transcript && isListening &&
-                        <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight">
-                            Listening...
-                        </p>
-                    }
-
-                </div>
 
 
-                <div className='flex justify-between items-center'>
-                    <Logo width={140} height={140} />
+                <TranscriptDisplay
+                    transcript={transcript}
+                    isListening={isListening}
+                    isEditing={isEditing}
+                    setIsEditing={setIsEditing}
+                    onTranscriptEdit={updateTranscript}
+                    onEditStart={pauseListening}
+                    onEditEnd={resumeListening}
+                    isSpeaking={isSpeaking}
+                    activateIcon={activateIcon}
+                />
 
-                    <div className="shadow-md px-4 rounded-3xl flex items-center gap-2 transition-[width] duration-500 lg:w-[350px]">
-                        <FaCircle className={`rounded-full text-red-500 transition-opacity duration-1000  ${isListening ? "animate-pulse" : "hidden"}`} />
-                        <AudioVisualizer
-                            audioStream={audioStream}
-                            isListening={isListening}
-                            containerClassName='w-full'
-                            height={50}
-                            lineWidth={1}
-                            strokeStyle="#203640"
-                        />
-
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <button
-                                    onClick={() => {
-                                        sendStudentMessage(transcript);
-                                    }}
-                                    className={`text-primary hover:text-primary/80 transition-colors duration-500
-                                        ${transcript && isListening ? 'animate-in slide-in-from-left duration-300' : 'hidden'}`}
-                                    aria-label="Send message"
-                                >
-                                    <IoSend size={24} />
-                                </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Send message</p>
-                            </TooltipContent>
-                        </Tooltip>
-
-                    </div>
-
-                    <figure onClick={() => setCameraOpen(!cameraOpen)}>
-                        <StudentAvatar useCamera={cameraOpen} />
-                    </figure>
-                </div>
+                <VivaControls
+                    isListening={isListening}
+                    audioStream={audioStream}
+                    transcript={transcript}
+                    activateIcon={activateIcon}
+                    cameraOpen={cameraOpen}
+                    onCameraToggle={() => setCameraOpen(!cameraOpen)}
+                    onSendMessage={sendStudentMessage}
+                />
             </section>
         </TooltipProvider>
     )

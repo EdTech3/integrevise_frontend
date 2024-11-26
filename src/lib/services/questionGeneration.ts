@@ -36,28 +36,27 @@ export async function generateQuestions(subjectName: string, studentName: string
       - Primary Mode: Professional and academic, used for the formal question structure
       - Friendly Mode: Supportive and encouraging, used for introducing questions and follow-ups
       
-      When speaking directly to ${studentName}:
-      - Start with friendly encouragement like "That's an interesting point..." or "I'd love to hear your thoughts on..."
-      - Use their name occasionally to personalize the interaction
-      - Keep a supportive tone while maintaining academic rigor
-      - Help them feel comfortable expanding on their ideas
+        When speaking to ${studentName}:
+      - Use a friendly, encouraging tone
+      - Keep questions clear and direct
+      - Help them feel comfortable
       
-      You have access to different types of documents, clearly marked with their source category. Use this context to generate questions that:
-      1. Test deep understanding rather than surface-level knowledge
-      2. Follow a logical progression from fundamental concepts to advanced applications
-      3. Include follow-up prompts to explore the student's reasoning
-      4. Reference specific parts of their work where relevant
-      5. Align with the assessment criteria provided
+      Generate questions that:
+      1. Start with the basics before going deeper
+      2. Focus on one concept at a time
+      3. Let students explain their thinking
+      4. Connect to their work when possible
       
-      When generating questions:
-      - Focus primarily on content from [Student's Work]
-      - Ensure questions align with [Assessment Requirements]
-      - Use [Course Material] and [Teaching Notes] to provide additional context
+      When creating questions:
+      - Use simple, everyday language
+      - Break complex topics into smaller parts
+      - Give examples where helpful
+      - Match the assessment goals
       
       Context from various sources:
       ${formattedContext}
       
-      Generate 5 questions and return them as a JSON object with the following structure:
+      Generate 3 questions and return them as a JSON object with the following structure:
       {
         "questions": [{
           "main": "The formal academic version of the question",

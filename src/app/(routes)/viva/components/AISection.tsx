@@ -20,7 +20,6 @@ const AISection = ({
     error,
     isLoading,
     isSpeaking,
-    question,
     questionsLoading,
     totalQuestions,
     currentQuestionIndex,

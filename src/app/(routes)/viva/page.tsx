@@ -16,8 +16,6 @@ import QuestionLoadingDialog from './components/QuestionLoadingDialog'
 import StudentSection from './components/StudentSection'
 import SuccessDialog from './components/SuccessDialog'
 
-//TODO: Add a loading state in the student section
-
 
 const Viva = () => {
     const { apiKey } = useApiKey();
@@ -25,9 +23,25 @@ const Viva = () => {
     const [showLoadingDialog, setShowLoadingDialog] = useState(true);
     const [hasInitialInteraction, setHasInitialInteraction] = useState(false);
 
-    const { isListening, transcript, startListening, stopListening, hasStopped, audioStream, error: sttError } = useDeepgramSTT(apiKey);
+    const {
+        isListening,
+        transcript,
+        pauseListening,
+        resumeListening,
+        updateTranscript,
+        startListening,
+        stopListening,
+        hasStopped,
+        audioStream,
+        error: sttError
+    } = useDeepgramSTT(apiKey);
 
-    const { isSpeaking, isLoading: isTTSLoading, convertToSpeech, error: ttsError } = useDeepgramTTS(() => {
+    const {
+        isSpeaking,
+        isLoading: isTTSLoading,
+        convertToSpeech,
+        error: ttsError
+    } = useDeepgramTTS(() => {
         setShouldStartListening(true);
     });
 
@@ -88,7 +102,6 @@ const Viva = () => {
             const result = await convertToSpeech(currentQuestion.friendlyQuestion);
             if (result) {
                 const { audio, streamDelay } = result;
-                console.log("Playing audio", audio);
                 audio.play();
                 setDisplayedText('');
                 for (let i = 0; i < currentQuestion.friendlyQuestion.length; i++) {
@@ -101,18 +114,20 @@ const Viva = () => {
         }
     }, [currentQuestion?.friendlyQuestion]);
 
+
+
     const handleFirstSpeak = useCallback(() => {
         setHasInitialInteraction(true);
         handleSpeak();
     }, [handleSpeak]);
 
+
+    // Side Effects
     useEffect(() => {
         if (hasInitialInteraction && currentQuestion?.friendlyQuestion && currentQuestionIndex > 0) {
             handleSpeak();
         }
     }, [currentQuestionIndex, currentQuestion?.friendlyQuestion, hasInitialInteraction, handleSpeak]);
-
-    // Side Effects
 
     useEffect(() => {
         if (questionsData && questionsData.length > 0) {
@@ -165,12 +180,16 @@ const Viva = () => {
             />
 
             <StudentSection
-                transcript={isSpeaking ? "" : transcript}
+                transcript={transcript}
                 isListening={isListening}
                 audioStream={audioStream}
                 error={sttError?.message}
                 hasStopped={hasStopped}
+                isSpeaking={isSpeaking}
                 sendStudentMessage={sendStudentMessage}
+                updateTranscript={updateTranscript}
+                pauseListening={pauseListening}
+                resumeListening={resumeListening}
             />
             <ProcessingDialog open={isAssessing} />
             <SuccessDialog open={isComplete} />

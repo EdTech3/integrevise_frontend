@@ -1,8 +1,11 @@
 {
     "cSpell.words": [
+        "analyse",
         "Audiomack",
         "Deepgram",
         "faceapi",
+        "supabase",
+        "turbopack",
         "Wavesurfer"
     ],
     "typescript.tsdk": "node_modules/typescript/lib"

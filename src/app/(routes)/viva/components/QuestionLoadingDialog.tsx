@@ -57,15 +57,15 @@ const QuestionLoadingDialog = ({ open, onStart, onClose, questionsLoading }: Pro
                 <div className="flex flex-col items-center space-y-6 py-4">
                     <AIAvatar expression="thinking" size={120} />
                     <div className="space-y-6 text-center">
-                        <p className="text-center">Hello Kelvin, You are about to take the integrevise Assesment</p>
+                        <p className="text-center">Hello Kelvin, You are about to take the integrevise Assessment</p>
 
                         <CardContent className="flex flex-col items-center">
-                            <h3 className="text-foreground text-center mb-2">Some rules</h3>
+                            <h3 className="text-foreground text-center mb-2">Some Tips & Advice</h3>
                             <ul className="custom-disc-size space-y-4 self-start text-left mx-auto">
                                 <li>Maintain a Distraction-Free Environment</li>
-                                <li>Use Approved Resources Only</li>
-                                <li>Follow Identity Verification Procedures</li>
-                                <li>Adhere to Technical Guidelines</li>
+                                <li>Ensure good lighting</li>
+
+                                <li>{"Don't"} worry about a perfect verbal response because you can edit your response</li>
                             </ul>
                         </CardContent>
 

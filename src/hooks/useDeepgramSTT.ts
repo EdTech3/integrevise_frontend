@@ -1,6 +1,7 @@
 import { infoToast } from '@/lib/toast';
 import { createClient, LiveTranscriptionEvents, type LiveClient } from '@deepgram/sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import useAudioStream from './useAudioStream';
 
 // Custom hook to manage Deepgram live client
 const useDeepgramLiveClient = (
@@ -27,7 +28,7 @@ const useDeepgramLiveClient = (
         measurements: true,
         profanity_filter: false,
         interim_results: true,
-        utterance_end_ms: 5000,
+        utterance_end_ms: 3000,
         keywords: ['integrevise']
       });
   
@@ -116,9 +117,20 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const [lastSpeechEnd, setLastSpeechEnd] = useState<number | null>(null);
   const [hasStopped, setHasStopped] = useState(false);
+
+  const KEEP_ALIVE_INTERVAL = 5000;
+  let keepAliveIntervalId: NodeJS.Timeout | undefined;
+
+
+  const {
+    stream,
+    startStream,
+    pauseStream,
+    resumeStream,
+    stopStream
+  } = useAudioStream(deviceId);
 
   const { liveClientRef, initDeepgram } = useDeepgramLiveClient(
     apiKey,
@@ -143,13 +155,7 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
     setError
   );
 
-
   const startListening = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setError(new Error('Could not access microphone'));
-      return;
-    }
-
     if (!apiKey) {
       infoToast('Creating a secure session...');
       return;
@@ -163,13 +169,7 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
   
       await initDeepgram(); // Wait for Deepgram connection
       
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          deviceId: deviceId ? { exact: deviceId } : undefined,
-        },
-      });
-      streamRef.current = stream;
-  
+      const stream = await startStream();
       startRecording(stream);
   
     } catch (err) {
@@ -177,15 +177,51 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setIsListening(false);
     }
-  }, [apiKey, deviceId, initDeepgram, startRecording]);
+  }, [apiKey, startStream, initDeepgram, startRecording]);
+
+  const pauseListening = useCallback(() => {
+    if (!mediaRecorder) return;
+
+      mediaRecorder.pause();
+      setIsListening(false)
+      pauseStream();
+
+      console.log('Starting keep-alive');
+      keepAliveIntervalId = setInterval(() => {
+        liveClientRef.current?.keepAlive();
+      }, KEEP_ALIVE_INTERVAL);
+
+
+  }, [pauseStream, isListening, hasStopped, mediaRecorder])
+
+ const resumeListening = useCallback(() => {
+    if (!mediaRecorder) return;
+
+    mediaRecorder.resume();
+    setIsListening(true)
+    resumeStream();
+
+
+    console.log('Stopping keep-alive');
+    if (keepAliveIntervalId) {
+      clearInterval(keepAliveIntervalId);
+      keepAliveIntervalId = undefined;
+    }
+
+
+  }, [resumeStream, isListening, hasStopped, mediaRecorder])
 
   const stopListening = useCallback(() => {
     stopRecording();
     liveClientRef.current?.requestClose();
-    streamRef.current?.getTracks().forEach((track) => track.stop());
+    stopStream();
     setIsListening(false);
-    streamRef.current = null;
-  }, [stopRecording, liveClientRef]);
+  }, [stopRecording, stopStream, liveClientRef]);
+
+  const updateTranscript = useCallback((newTranscript: string) => {
+    setTranscript(newTranscript);
+  }, []);
+  
 
   useEffect(() => {
     return () => {
@@ -201,9 +237,12 @@ const useDeepgramSTT = (apiKey: string | null, deviceId?: string) => {
     startListening,
     stopListening,
     mediaRecorder,
-    audioStream: streamRef.current,
+    audioStream: stream,
     lastSpeechEnd,
     hasStopped,
+    updateTranscript,
+    pauseListening,
+    resumeListening
   };
 };
 
