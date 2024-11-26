@@ -91,7 +91,7 @@ const TranscriptDisplay = ({ transcript, isListening, isEditing, activateIcon, i
                     />
                 )}
 
-                {!transcript && !isListening && isSpeaking(
+                {!transcript && !isListening && isSpeaking && (
                     <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight">
                         Your transcribed text will appear here
                     </p>
