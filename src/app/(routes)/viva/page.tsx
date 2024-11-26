@@ -185,6 +185,7 @@ const Viva = () => {
                 audioStream={audioStream}
                 error={sttError?.message}
                 hasStopped={hasStopped}
+                isSpeaking={isSpeaking}
                 sendStudentMessage={sendStudentMessage}
                 updateTranscript={updateTranscript}
                 pauseListening={pauseListening}

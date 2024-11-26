@@ -12,9 +12,10 @@ interface TranscriptDisplayProps {
     onEditStart?: () => void;
     onEditEnd?: () => void;
     activateIcon: boolean
+    isSpeaking: boolean;
 }
 
-const TranscriptDisplay = ({ transcript, isListening, isEditing, activateIcon, onEditStart, onEditEnd, onTranscriptEdit, setIsEditing }: TranscriptDisplayProps) => {
+const TranscriptDisplay = ({ transcript, isListening, isEditing, activateIcon, isSpeaking, onEditStart, onEditEnd, onTranscriptEdit, setIsEditing }: TranscriptDisplayProps) => {
     const [editedTranscript, setEditedTranscript] = useState(transcript);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -90,7 +91,7 @@ const TranscriptDisplay = ({ transcript, isListening, isEditing, activateIcon, o
                     />
                 )}
 
-                {!transcript && !isListening && (
+                {!transcript && !isListening && isSpeaking(
                     <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight">
                         Your transcribed text will appear here
                     </p>

@@ -1,6 +1,5 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { errorToast } from '@/lib/toast';
-import { Pen } from "lucide-react";
 import { useEffect, useState } from 'react';
 import TranscriptDisplay from './TranscriptDisplay';
 import VivaControls from './VivaControls';
@@ -11,13 +10,14 @@ interface StudentSectionProps {
     audioStream: MediaStream | null;
     error: string | undefined;
     hasStopped: boolean;
+    isSpeaking: boolean;
     sendStudentMessage: (transcript: string) => void;
     updateTranscript: (newTranscript: string) => void
     pauseListening: () => void
     resumeListening: () => void
 }
 
-const StudentSection = ({ transcript, isListening, audioStream, error, hasStopped, sendStudentMessage, updateTranscript, pauseListening, resumeListening }: StudentSectionProps) => {
+const StudentSection = ({ transcript, isListening, audioStream, error, hasStopped, isSpeaking, sendStudentMessage, updateTranscript, pauseListening, resumeListening }: StudentSectionProps) => {
     const [cameraOpen, setCameraOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const activateIcon = Boolean(transcript && isListening && hasStopped && !isEditing);
@@ -42,6 +42,7 @@ const StudentSection = ({ transcript, isListening, audioStream, error, hasStoppe
                     onTranscriptEdit={updateTranscript}
                     onEditStart={pauseListening}
                     onEditEnd={resumeListening}
+                    isSpeaking={isSpeaking}
                     activateIcon={activateIcon}
                 />
 

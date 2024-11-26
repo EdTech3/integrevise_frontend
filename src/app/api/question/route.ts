@@ -40,10 +40,6 @@ if (existingQuestions && existingQuestions.length > 0) {
   return NextResponse.json(existingQuestions);
 }
 
-    // If questions exist, return them
-    if (existingQuestions.length > 0) {
-      return NextResponse.json(existingQuestions);
-    }
 
     // Generate questions
     const {questions} = await generateQuestions(
@@ -54,7 +50,7 @@ if (existingQuestions && existingQuestions.length > 0) {
 
 
     // Format questions for bulk insert
-    const questionsToCreate = questions.map(question => ({
+    const questionsToCreate = questions.slice(0, 3).map(question => ({
       id: crypto.randomUUID(), // Generate UUID for id
       question: question.main,
       friendlyQuestion: question.friendlyVersion,
