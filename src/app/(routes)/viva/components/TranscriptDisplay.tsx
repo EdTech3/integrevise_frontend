@@ -73,7 +73,7 @@ const TranscriptDisplay = ({ transcript, isListening, isEditing, activateIcon, i
             }
 
             <div className='flex-grow h-[300px] overflow-scroll'>
-                {transcript && !isEditing && (
+                {transcript && !isEditing && !isSpeaking && (
                     <p className="text-center text-base sm:text-lg md:text-xl lg:text-2xl leading-tight w-full">
                         {transcript}
                     </p>

@@ -130,7 +130,7 @@ const Home = () => {
         <PreAssessmentCheckTimeline selectedId="facial-recognition" />
 
         <div className="relative overlay rounded-lg overflow-hidden text-gray-200">
-          <Header deviceId={deviceId} devices={devices} name="Chloe Decker" setDeviceId={setDeviceId} />
+          <Header deviceId={deviceId} devices={devices} name="Kelvin" setDeviceId={setDeviceId} />
           <ProgressTimeline stages={stages} />
           <CameraFeed deviceId={deviceId} updateStageStatus={updateStageStatus} ref={webcamRef} />
         </div>
