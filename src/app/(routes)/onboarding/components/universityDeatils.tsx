@@ -1,45 +1,53 @@
-"use client";
-
 import { Field, Form, Formik } from "formik";
 import * as Yup from "yup";
-import { useState, useCallback } from "react";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
+import { useState, useEffect, useCallback } from "react";
+import { Autocomplete } from "@/components/ui/autocomplete";
 import debounce from "lodash.debounce";
 import { axiosInstance } from "@/lib/axios";
 import { urlConfig } from "@/lib/utils/urls";
 import { API_ROUTES } from "@/lib/config/api";
 
+interface UniversityOption {
+  label: string;
+}
+
 interface UniversityDetailsProps {
   onNext: () => void;
 }
 
-const universityOptions = [
-  { label: "Swansea University", value: "swanseauni" },
-  { label: "Oxford University", value: "oxforduni" },
-  { label: "University of Porthmuth", value: "porthmuthuni" },
-];
-
 const validationSchema = Yup.object().shape({
   universityName: Yup.string().required("University Name is required"),
-  subdomain: Yup.string()
-    .required("Subdomain is required")
-    .matches(
-      /^[a-z0-9]+$/,
-      "Subdomain must be alphanumeric and have no spaces"
-    ),
 });
 
 const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
+  const [universityOptions, setUniversityOptions] = useState<
+    UniversityOption[]
+  >([]);
   const [isDomainAvailable, setIsDomainAvailable] = useState(false);
   const [checkingDomain, setCheckingDomain] = useState(false);
   const [attemptedDomainCheck, setAttemptedDomainCheck] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    const fetchUniversityNames = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `${urlConfig.apiUrl}${API_ROUTES.onboarding.availableUiniversities}`
+        );
+        console.log("Response data:", response.data);
+
+        const options = response.data.universities.map((uni: string) => ({
+          label: uni,
+        }));
+        setUniversityOptions(options);
+      } catch (error) {
+        console.error("Failed to fetch university names:", error);
+        setUniversityOptions([{ label: "Error fetching universities" }]);
+      }
+    };
+
+    fetchUniversityNames();
+  }, []);
 
   const checkDomainAvailability = useCallback(
     debounce(async (domain: string) => {
@@ -83,7 +91,7 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
           onSubmit={async (values, { setSubmitting, setErrors }) => {
             try {
               const response = await axiosInstance.post(
-                `${urlConfig.apiUrl}/${API_ROUTES.onboarding.createUniversity}`,
+                `${urlConfig.apiUrl}${API_ROUTES.onboarding.createUniversity}`,
                 {
                   university_name: values.universityName,
                   domain: values.subdomain,
@@ -114,34 +122,18 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
                 >
                   University Name <span className="text-red-500">*</span>
                 </label>
-                <Select
-                  value={values.universityName}
-                  onValueChange={(value) => {
+                <Autocomplete
+                  options={universityOptions.map((opt) => opt.label)}
+                  onChange={(value) => {
                     if (!isSubmitted) {
                       setFieldValue("universityName", value);
-                      const universityLabel =
-                        universityOptions.find(
-                          (option) => option.value === value
-                        )?.label || "";
-                      const suggestedSubdomain =
-                        suggestSubdomain(universityLabel);
+                      const suggestedSubdomain = suggestSubdomain(value);
                       setFieldValue("subdomain", suggestedSubdomain);
                       checkDomainAvailability(suggestedSubdomain);
                     }
                   }}
-                  disabled={isSubmitted} 
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your university" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {universityOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select or type your university"
+                />
                 {errors.universityName && touched.universityName && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.universityName}
@@ -163,7 +155,7 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
                   type="text"
                   placeholder="Enter subdomain"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  disabled={isSubmitted} // Disable input after submission
+                  disabled={isSubmitted}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     if (!isSubmitted) {
                       const subdomain = e.target.value;
@@ -190,49 +182,13 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
                       Checking availability...
                     </span>
                   ) : attemptedDomainCheck && isDomainAvailable ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg
-                          className="h-3 w-3 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-green-600 font-medium">
-                        Domain Available
-                      </span>
-                    </div>
+                    <span className="text-green-600 font-medium">
+                      Domain Available
+                    </span>
                   ) : attemptedDomainCheck && !isDomainAvailable ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="h-4 w-4 bg-red-500 rounded-full flex items-center justify-center">
-                        <svg
-                          className="h-3 w-3 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-red-600 font-medium">
-                        Domain Not Available
-                      </span>
-                    </div>
+                    <span className="text-red-600 font-medium">
+                      Domain Not Available
+                    </span>
                   ) : null}
                 </div>
               </div>

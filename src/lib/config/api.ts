@@ -14,6 +14,7 @@ export const API_ROUTES = {
   onboarding:{
     checkDomain: '/universities/check-domain',
     createUniversity: '/universities',
+    availableUiniversities: '/universities/available',
     appRoles: '/roles/app',
     lmsRoles: '/roles/lms',
     lmsPlatforms: '/lms-platforms',
