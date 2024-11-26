@@ -44,7 +44,7 @@ if (existingQuestions && existingQuestions.length > 0) {
     // Generate questions
     const {questions} = await generateQuestions(
       vivaSession.subject.name,
-      "Kelvin", // TODO: Get this from the session or user profile
+      "Kyle", // TODO: Get this from the session or user profile
       formattedContext
     );
 
