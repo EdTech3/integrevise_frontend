@@ -20,6 +20,7 @@ export const API_ROUTES = {
     lmsRoles: '/roles/lms',
     lmsPlatforms: '/lms-platforms',
     testLmsConnection: '/lms-config/test',
+    saveLmsConfig: '/lms-config',
   },
   assessment: '/assessment',
   questions: '/question',

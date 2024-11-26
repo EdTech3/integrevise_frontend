@@ -13,6 +13,7 @@ import {
 import { axiosInstance } from "@/lib/axios";
 import { urlConfig } from "@/lib/utils/urls";
 import { API_ROUTES } from "@/lib/config/api";
+import { useDomainStore } from "@/lib/store/onboarding";
 
 interface LMSProps {
   onNext: () => void;
@@ -47,13 +48,15 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
   const [lmsOptions, setLmsOptions] = useState<LmsOption[]>([]);
   const [selectedLMS, setSelectedLMS] = useState<string>("moodle");
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const selectedDomain = useDomainStore((state) => state.selectedDomain);
+  console.log("Selected Domain:", selectedDomain);
 
   // Fetch LMS options from backend
   useEffect(() => {
     const fetchLmsOptions = async () => {
       try {
         const response = await axiosInstance.get(
-          `${urlConfig.metroUni}${API_ROUTES.onboarding.lmsPlatforms}`
+          `${urlConfig.apiUrl}${API_ROUTES.onboarding.lmsPlatforms}`
         );
 
         const options: LmsOption[] = response.data.map((option: any) => ({
@@ -97,12 +100,13 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
       const payload = {
         ...values,
         lms_id: selectedLmsOption.lms_id,
+
       };
 
       console.log("Testing connection with payload:", payload);
 
       const response = await axiosInstance.post(
-        `${urlConfig.metroUni}${API_ROUTES.onboarding.testLmsConnection}`,
+        `${urlConfig.apiUrl}${API_ROUTES.onboarding.testLmsConnection}`,
         payload
       );
 
@@ -131,10 +135,31 @@ const LmsIntegration: React.FC<LMSProps> = ({ onNext }) => {
             return acc;
           }, {} as Record<string, string>)}
           validationSchema={validationSchema}
-          onSubmit={(values, { setSubmitting }) => {
+          onSubmit={async(values, { setSubmitting }) => {
             setSubmitting(true);
-            onNext();
-            setSubmitting(false);
+            const selectedLmsOption = lmsOptions.find(
+              (option) => option.value === selectedLMS
+            );
+      
+            const payload = {
+              ...values,
+              lms_id: selectedLmsOption?.lms_id,
+              domain: selectedDomain
+      
+            };
+
+            console.log("Payload:", payload);
+            const response = await axiosInstance.post(
+              `${urlConfig.apiUrl}${API_ROUTES.onboarding.saveLmsConfig}`,
+              payload
+            )
+            if (response.status === 201) {
+              setSubmitting(false);
+              onNext();
+            
+            }
+        
+       
           }}
           enableReinitialize
         >
