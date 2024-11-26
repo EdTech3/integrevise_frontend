@@ -10,20 +10,25 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { useDomainStore } from "@/lib/store/onboarding";
+import { axiosInstance } from "@/lib/axios";
+import { urlConfig } from "@/lib/utils/urls";
+import { API_ROUTES } from "@/lib/config/api";
+import { Provider } from "@radix-ui/react-tooltip";
 
 const ssoOptions = [
-  { label: "Azure Directory (Microsoft)", value: "azure" },
+  { label: "Azure Directory (Microsoft)", value: "azure_ad" },
   { label: "Google", value: "google" },
   { label: "Okta", value: "okta" },
 ];
 const ssoFields: Record<string, { name: string; label: string; type: string }[]> = {
-  azure: [
+  azure_ad: [
     { name: "clientId", label: "Client ID", type: "text" },
     { name: "clientSecret", label: "Client Secret", type: "password" },
     { name: "tenantId", label: "Tenant ID", type: "text" },
     { name: "redirectUrl", label: "Redirect URL", type: "text" },
   ],
-  google: [
+  google_workspace: [
     { name: "clientId", label: "Client ID", type: "text" },
     { name: "clientSecret", label: "Client Secret", type: "password" },
     { name: "projectId", label: "Project ID", type: "text" },
@@ -38,7 +43,10 @@ const ssoFields: Record<string, { name: string; label: string; type: string }[]>
 };
 
 const SSOPage = ({onNext}) => {
-  const [selectedSSO, setSelectedSSO] = useState<string>("azure");
+  const [selectedSSO, setSelectedSSO] = useState<string>("azure_ad");
+  const selectedDomain = useDomainStore((state) => state.selectedDomain);
+  console.log("Selected Domain:", selectedDomain);
+
 
   const validationSchema = Yup.object(
     ssoFields[selectedSSO].reduce((acc, field) => {
@@ -65,10 +73,24 @@ const SSOPage = ({onNext}) => {
             {} as Record<string, string>
           )}
           validationSchema={validationSchema}
-          onSubmit={(values, { setSubmitting }) => {
+          onSubmit={async(values, { setSubmitting }) => {
             setSubmitting(true);
-            onNext(); 
-            setSubmitting(false);
+            const payload = {
+              ...values,
+              domain: selectedDomain,
+              provider: selectedSSO
+            }
+            const response = await axiosInstance.post(
+              `${urlConfig.apiUrl}${API_ROUTES.onboarding.ssoIntegration}`,
+              payload
+            )
+            if (response.status === 201) {
+              console.log("SSO Integration successful");
+              onNext(); 
+              setSubmitting(false);
+            }
+   
+         
           }}
           enableReinitialize
         >

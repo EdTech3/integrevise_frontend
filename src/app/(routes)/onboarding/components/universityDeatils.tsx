@@ -6,6 +6,8 @@ import debounce from "lodash.debounce";
 import { axiosInstance } from "@/lib/axios";
 import { urlConfig } from "@/lib/utils/urls";
 import { API_ROUTES } from "@/lib/config/api";
+import { useDomainStore } from "@/lib/store/onboarding";
+
 
 interface UniversityOption {
   label: string;
@@ -27,6 +29,8 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
   const [checkingDomain, setCheckingDomain] = useState(false);
   const [attemptedDomainCheck, setAttemptedDomainCheck] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const setSelectedDomain = useDomainStore((state) => state.setSelectedDomain);
+
 
   useEffect(() => {
     const fetchUniversityNames = async () => {
@@ -99,6 +103,7 @@ const UniversityDetails: React.FC<UniversityDetailsProps> = ({ onNext }) => {
               );
 
               if (response.status === 201) {
+                setSelectedDomain(values.subdomain);
                 setIsSubmitted(true);
                 onNext();
               }

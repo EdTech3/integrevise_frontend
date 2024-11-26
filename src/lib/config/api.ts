@@ -15,6 +15,7 @@ export const API_ROUTES = {
     checkDomain: '/universities/check-domain',
     createUniversity: '/universities',
     availableUiniversities: '/universities/available',
+    ssoIntegration: '/auth/sso/config',
     appRoles: '/roles/app',
     lmsRoles: '/roles/lms',
     lmsPlatforms: '/lms-platforms',
