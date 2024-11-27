@@ -40,21 +40,17 @@ if (existingQuestions && existingQuestions.length > 0) {
   return NextResponse.json(existingQuestions);
 }
 
-    // If questions exist, return them
-    if (existingQuestions.length > 0) {
-      return NextResponse.json(existingQuestions);
-    }
 
     // Generate questions
     const {questions} = await generateQuestions(
       vivaSession.subject.name,
-      "Kelvin", // TODO: Get this from the session or user profile
+      "Kyle", // TODO: Get this from the session or user profile
       formattedContext
     );
 
 
     // Format questions for bulk insert
-    const questionsToCreate = questions.map(question => ({
+    const questionsToCreate = questions.slice(0, 3).map(question => ({
       id: crypto.randomUUID(), // Generate UUID for id
       question: question.main,
       friendlyQuestion: question.friendlyVersion,

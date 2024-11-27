@@ -34,7 +34,7 @@ export async function DELETE(request: Request) {
         .remove([document.filePath]);
 
       if (deleteError) {
-        console.error('Error deleting file from storage:', deleteError);
+        console.log('Error deleting file from storage:', deleteError);
         return NextResponse.json(
           { error: 'Failed to delete file from storage' },
           { status: 500 }

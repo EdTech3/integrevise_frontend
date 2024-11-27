@@ -24,7 +24,7 @@ const CommunicationMethodSelection = () => {
         <Logo width={200} height={200} className='mb-4' />
 
         <h4 className='text-center lg:w-[35ch] text-2xl lg:text-3xl mb-20 font-medium'>
-          Hello Chloe! How would you like take this test?
+          Hello Kyle! How would you like take this test?
         </h4>
 
         <div className='flex flex-col items-start lg:items-start space-y-8 lg:space-y-0 lg:flex-row justify-between w-full max-w-lg'>

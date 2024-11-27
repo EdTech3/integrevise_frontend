@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         hostname: 'avatar.iran.liara.run',
+      },
+      {
+        hostname: 'picsum.photos'
       }
     ]
   },
