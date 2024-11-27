@@ -34,7 +34,7 @@ const RoleAssignment: React.FC<RoleAssignmentProps> = ({ onFinish }) => {
       try {
     
         const appResponse = await axiosInstance.get(
-          `${urlConfig.metroUni}${API_ROUTES.onboarding.appRoles}`
+          `${urlConfig.apiUrl}${API_ROUTES.onboarding.appRoles}`
         );
         const fetchedAppRoles: AppRole[] = appResponse.data;
 
